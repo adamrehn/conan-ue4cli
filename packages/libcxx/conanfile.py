@@ -10,6 +10,8 @@ class LibCxxConan(ConanFile):
     
     def package(self):
         self.copy("*")
+        if self.settings.os == "Linux":
+            self.run("chmod +x {}/bin/*.py".format(self.package_folder))
     
     def package_info(self):
         from ue4lib import UE4Lib
