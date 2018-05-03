@@ -10,8 +10,6 @@ class LibCxxConan(ConanFile):
     
     def package(self):
         self.copy("*")
-        if self.settings.os == "Linux":
-            self.run("chmod +x {}/bin/*.py".format(self.package_folder))
     
     def package_info(self):
         from ue4lib import UE4Lib
@@ -37,6 +35,9 @@ class LibCxxConan(ConanFile):
             self.env_info.CC = self.env_info.CLANG_INTERPOSE_CC
             self.env_info.CXX = self.env_info.CLANG_INTERPOSE_CXX
             self.env_info.LDFLAGS = "---link"
+            
+            # Ensure our wrapper scripts are executable
+            self.run("chmod +x {}/bin/*.py".format(self.package_folder))
             
         # Since a Conan profile can override environment variables from recipes, we provide functionality to restore them
         self.env_info.PYTHONPATH.append(self.package_folder)
