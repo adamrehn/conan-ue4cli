@@ -37,7 +37,7 @@ class LibCxxConan(ConanFile):
             self.env_info.LDFLAGS = "---link"
             
             # Ensure our wrapper scripts are executable
-            self.run("chmod +x {}/bin/*.py".format(self.package_folder))
+            self.run("chmod +x {}/bin/clang.py {}/bin/clang++.py".format(self.package_folder, self.package_folder))
             
         # Since a Conan profile can override environment variables from recipes, we provide functionality to restore them
         self.env_info.PYTHONPATH.append(self.package_folder)
