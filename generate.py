@@ -20,22 +20,23 @@ def detectClang():
 	Detects the presence of clang and returns a tuple containing the path to clang and the path to clang++
 	'''
 	
-	# Check if UE4 is using a bundled version of clang (introduced in UE4.20.0)
-	unreal = ue4cli.UnrealManagerFactory.create()
-	engineRoot = unreal.getEngineRoot()
-	bundledClang = glob.glob(os.path.join(engineRoot, "Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/**/bin/clang"), recursive=True)
-	if len(bundledClang) != 0:
-		return (bundledClang[0], bundledClang[0] + "++")
-	
 	# Check if clang is installed without any suffix
 	if conans.tools.which("clang++") != None:
 		return ("clang", "clang++")
 	
 	# Check if clang 3.8 or newer is installed with a version suffix
-	for ver in reversed(range(38, 51)):
+	for ver in reversed(range(38, 60)):
 		suffix = "-{:.1f}".format(ver / 10.0)
 		if conans.tools.which("clang++" + suffix) != None:
 			return ("clang" + suffix, "clang++" + suffix)
+	
+	# Check if UE4 has a bundled version of clang (introduced in UE4.20.0)
+	# (Note that UBT only uses the bundled clang if a system clang is unavailable, so we also need to follow this behaviour)
+	unreal = ue4cli.UnrealManagerFactory.create()
+	engineRoot = unreal.getEngineRoot()
+	bundledClang = glob.glob(os.path.join(engineRoot, "Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/**/bin/clang"), recursive=True)
+	if len(bundledClang) != 0:
+		return (bundledClang[0], bundledClang[0] + "++")
 	
 	raise Exception("could not detect clang. Please ensure clang 3.8 or newer is installed.")
 
