@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import conans, copy, os, platform, shutil, subprocess, sys, tempfile, ue4cli
+import conans, copy, glob, os, platform, shutil, subprocess, sys, tempfile, ue4cli
 from os import path
 
 def run(command, cwd=None, env=None):
@@ -17,18 +17,25 @@ def run(command, cwd=None, env=None):
 
 def detectClang():
 	'''
-	Detects the presence of clang and returns the version suffix (if any)
+	Detects the presence of clang and returns a tuple containing the path to clang and the path to clang++
 	'''
+	
+	# Check if UE4 is using a bundled version of clang (introduced in UE4.20.0)
+	unreal = ue4cli.UnrealManagerFactory.create()
+	engineRoot = unreal.getEngineRoot()
+	bundledClang = glob.glob(os.path.join(engineRoot, "Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/**/bin/clang"), recursive=True)
+	if len(bundledClang) != 0:
+		return (bundledClang[0], bundledClang[0] + "++")
 	
 	# Check if clang is installed without any suffix
 	if conans.tools.which("clang++") != None:
-		return ""
+		return ("clang", "clang++")
 	
 	# Check if clang 3.8 or newer is installed with a version suffix
 	for ver in reversed(range(38, 51)):
 		suffix = "-{:.1f}".format(ver / 10.0)
 		if conans.tools.which("clang++" + suffix) != None:
-			return suffix
+			return ("clang" + suffix, "clang++" + suffix)
 	
 	raise Exception("could not detect clang. Please ensure clang 3.8 or newer is installed.")
 
@@ -68,9 +75,11 @@ def main():
 	# Under Linux, make sure the ue4 Conan profile detects clang instead of GCC
 	profileEnv = copy.deepcopy(os.environ)
 	if platform.system() == "Linux":
-		clangSuffix = detectClang()
-		profileEnv["CC"] = "clang" + clangSuffix
-		profileEnv["CXX"] = "clang++" + clangSuffix
+		clang = detectClang()
+		profileEnv["CC"] = clang[0]
+		profileEnv["CXX"] = clang[1]
+		print("Detected clang:   {}".format(clang[0]))
+		print("Detected clang++: {}".format(clang[1]))
 	
 	print("Removing the '{}' Conan profile if it already exists...".format(profile))
 	profileFile = path.join(conans.paths.get_conan_user_home(), ".conan", "profiles", profile)
