@@ -59,6 +59,14 @@ def generate(libName, template, packageDir, profile):
 
 def main():
 	
+	# Verify that the detected version of UE4 is new enough
+	ue4 = ue4cli.UnrealManagerFactory.create()
+	versionFull = ue4.getEngineVersion()
+	versionMinor = int(ue4.getEngineVersion('minor'))
+	if versionMinor <= 19:
+		print('Warning: the detected UE4 version ({}) is too old (4.19.0 or newer required), skipping installation.'.format(versionFull), file=sys.stderr)
+		sys.exit(0)
+	
 	# Determine the full path to the directories containing our files
 	scriptDir = path.dirname(path.abspath(__file__))
 	packagesDir = path.join(scriptDir, "packages")
@@ -104,7 +112,6 @@ def main():
 	install(path.join(packagesDir, "libcxx"), profile)
 	
 	print("Retrieving thirdparty library list from ue4cli...")
-	ue4 = ue4cli.UnrealManagerFactory.create()
 	libs = [lib for lib in ue4.listThirdPartyLibs() if lib != 'libc++']
 	
 	# Generate the package for each UE4-bundled thirdparty library
