@@ -63,7 +63,7 @@ def main():
 	ue4 = ue4cli.UnrealManagerFactory.create()
 	versionFull = ue4.getEngineVersion()
 	versionMinor = int(ue4.getEngineVersion('minor'))
-	if versionMinor <= 19:
+	if versionMinor < 19:
 		print('Warning: the detected UE4 version ({}) is too old (4.19.0 or newer required), skipping installation.'.format(versionFull), file=sys.stderr)
 		sys.exit(0)
 	
