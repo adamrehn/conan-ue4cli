@@ -1,7 +1,7 @@
 from conans import ConanFile
 
-class UE4LibConan(ConanFile):
-    name = "ue4lib"
+class UE4UtilConan(ConanFile):
+    name = "ue4util"
     version = "ue4"
     exports = "*.py"
     build_policy = "missing"

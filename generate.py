@@ -10,7 +10,7 @@ def run(command, cwd=None, env=None):
 	(stdout, stderr) = proc.communicate(input)
 	if proc.returncode != 0:
 		raise Exception(
-			'child process {} failed with exit code {}'.format(command, proc.returncode) +
+			"child process {} failed with exit code {}".format(command, proc.returncode) +
 			'\nstdout: "{}"\nstderr: "{}"'.format(stdout, stderr)
 		)
 
@@ -41,30 +41,30 @@ def detectClang():
 	raise Exception("could not detect clang. Please ensure clang 3.8 or newer is installed.")
 
 
-def install(packageDir, profile):
+def install(packageDir, channel, profile):
 	'''
 	Installs a package
 	'''
-	run(["conan", "create", ".", "adamrehn/generated", "--profile", profile], cwd=packageDir)
+	run(["conan", "create", ".", "adamrehn/" + channel, "--profile", profile], cwd=packageDir)
 
 
-def generate(libName, template, packageDir, profile):
+def generate(libName, template, packageDir, channel, profile):
 	'''
 	Generates and installs a wrapper package
 	'''
 	conanfile = template.replace("${LIBNAME}", libName)
 	conans.tools.save(path.join(packageDir, "conanfile.py"), conanfile)
-	install(packageDir, profile)
+	install(packageDir, channel, profile)
 
 
-def main():
+def main(profileOnly):
 	
 	# Verify that the detected version of UE4 is new enough
 	ue4 = ue4cli.UnrealManagerFactory.create()
 	versionFull = ue4.getEngineVersion()
-	versionMinor = int(ue4.getEngineVersion('minor'))
+	versionMinor = int(ue4.getEngineVersion("minor"))
 	if versionMinor < 19:
-		print('Warning: the detected UE4 version ({}) is too old (4.19.0 or newer required), skipping installation.'.format(versionFull), file=sys.stderr)
+		print("Warning: the detected UE4 version ({}) is too old (4.19.0 or newer required), skipping installation.".format(versionFull), file=sys.stderr)
 		sys.exit(0)
 	
 	# Determine the full path to the directories containing our files
@@ -104,20 +104,32 @@ def main():
 		run(["conan", "profile", "update", "env.CXX={}".format(profileEnv["CXX"]), profile])
 		run(["conan", "profile", "update", "settings.compiler.libcxx=libc++", profile])
 	
-	print("Removing any previous versions of generated packages...")
-	run(["conan", "remove", "--force", "*@adamrehn/generated"])
+	print("Removing any previous versions of profile base packages...")
+	run(["conan", "remove", "--force", "*@adamrehn/profile"])
 	
-	print("Installing base packages...")
-	install(path.join(packagesDir, "ue4lib"), profile)
-	install(path.join(packagesDir, "libcxx"), profile)
+	print("Installing profile base packages...")
+	install(path.join(packagesDir, "ue4lib"), "profile", profile)
+	install(path.join(packagesDir, "libcxx"), "profile", profile)
+	install(path.join(packagesDir, "ue4util"), "profile", profile)
+	
+	# If we are only creating the Conan profile, stop processing here
+	if profileOnly == True:
+		print("Skipping wrapper package generation.")
+		sys.exit(0)
+	
+	# Use the short form of the UE4 version string (e.g 4.19) as the channel for our installed packages
+	channel = ue4.getEngineVersion("short")
 	
 	print("Retrieving thirdparty library list from ue4cli...")
-	libs = [lib for lib in ue4.listThirdPartyLibs() if lib != 'libc++']
+	libs = [lib for lib in ue4.listThirdPartyLibs() if lib != "libc++"]
+	
+	print("Removing any previous versions of generated wrapper packages for {}...".format(channel))
+	run(["conan", "remove", "--force", "*/ue4@adamrehn/{}".format(channel)])
 	
 	# Generate the package for each UE4-bundled thirdparty library
 	for lib in libs:
 		print("Generating and installing wrapper package for {}...".format(lib))
-		generate(lib, template, tempDir, profile)
+		generate(lib, template, tempDir, channel, profile)
 	
 	# Attempt to remove the temporary directory
 	try:
@@ -127,4 +139,4 @@ def main():
 	print("Done.")
 
 if __name__ == "__main__":
-	main()
+	main(len(sys.argv) > 1 and sys.argv[1] == "--profile-only")

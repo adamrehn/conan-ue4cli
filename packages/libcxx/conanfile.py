@@ -5,7 +5,7 @@ class LibCxxConan(ConanFile):
     name = "libcxx"
     version = "ue4"
     settings = "os", "compiler", "build_type", "arch"
-    requires = "ue4lib/0.0.1@adamrehn/generated"
+    requires = "ue4lib/ue4@adamrehn/profile"
     exports = ("*.py", "bin")
     
     def package(self):

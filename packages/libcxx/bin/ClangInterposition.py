@@ -7,7 +7,7 @@ def interpose(cxx):
 	args = list([arg for arg in sys.argv[1:] if arg.startswith("-stdlib=") == False])
 	
 	# Prepend our custom compiler flags
-	args = shlex.split(os.environ["CLANG_INTERPOSE_CXXFLAGS"]) + args
+	args = shlex.split(os.environ["CLANG_INTERPOSE_CXXFLAGS"]) + ["-Wno-unused-command-line-argument"] + args
 	
 	# If this is a link invocation, append our custom linker flags
 	if '---link' in args:
