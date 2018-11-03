@@ -21,12 +21,16 @@ class ${LIBNAME}Conan(ConanFile):
         
         # Copy the header files (and any stray source files) into our package
         for includedir in details.includedirs():
-            self.copy("*.h", "include", src=includedir)
-            self.copy("*.hpp", "include", src=includedir)
-            self.copy("*.inc", "include", src=includedir)
-            self.copy("*.c", "include", src=includedir)
-            self.copy("*.cc", "include", src=includedir)
-            self.copy("*.cpp", "include", src=includedir)
+            
+            # Filter out any instances where the module has specified the root of
+            # the ThirdParty modules tree as an include directory (yes, seriously.)
+            if os.path.basename(includedir) != 'ThirdParty':
+                self.copy("*.h", "include", src=includedir)
+                self.copy("*.hpp", "include", src=includedir)
+                self.copy("*.inc", "include", src=includedir)
+                self.copy("*.c", "include", src=includedir)
+                self.copy("*.cc", "include", src=includedir)
+                self.copy("*.cpp", "include", src=includedir)
         
         # Copy any static library files into our package, ignoring shared libraries
         # and gathering a list of any system libraries that need to be linked against
