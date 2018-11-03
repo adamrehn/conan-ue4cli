@@ -2,6 +2,25 @@
 import conans, copy, glob, os, platform, shutil, subprocess, sys, tempfile, ue4cli
 from os import path
 
+class DelegateManager(object):
+	def __init__(self, delegatesDir):
+		
+		# Read the contents of the default (no-op) delegate class for generated packages
+		self.delegatesDir = delegatesDir
+		self.defaultDelegate = conans.tools.load(path.join(self.delegatesDir, "__default.py"))
+	
+	def getDelegateClass(self, libName):
+		'''
+		Retrieves the delegate class code for the specified package (if one exists),
+		or else returns the default (no-op) delegate class
+		'''
+		delegateFile = path.join(self.delegatesDir, "{}.py".format(libName))
+		if path.exists(delegateFile):
+			return conans.tools.load(delegateFile)
+		
+		return self.defaultDelegate
+
+
 def run(command, cwd=None, env=None):
 	'''
 	Executes a command and raises an exception if it fails
@@ -48,11 +67,12 @@ def install(packageDir, channel, profile):
 	run(["conan", "create", ".", "adamrehn/" + channel, "--profile", profile], cwd=packageDir)
 
 
-def generate(libName, template, packageDir, channel, profile):
+def generate(libName, template, delegates, packageDir, channel, profile):
 	'''
 	Generates and installs a wrapper package
 	'''
 	conanfile = template.replace("${LIBNAME}", libName)
+	conanfile = conanfile.replace("${DELEGATE_CLASS}", delegates.getDelegateClass(libName))
 	conans.tools.save(path.join(packageDir, "conanfile.py"), conanfile)
 	install(packageDir, channel, profile)
 
@@ -71,9 +91,13 @@ def main(profileOnly):
 	scriptDir = path.dirname(path.abspath(__file__))
 	packagesDir = path.join(scriptDir, "packages")
 	templateDir = path.join(scriptDir, "template")
+	delegatesDir = path.join(scriptDir, "delegates")
 	
 	# Read the contents of the template conanfile for generated packages
 	template = conans.tools.load(path.join(templateDir, "conanfile.py"))
+	
+	# Create the delegate class manager
+	delegates = DelegateManager(delegatesDir)
 	
 	# Create a temporary directory to hold the generated conanfiles
 	tempDir = tempfile.mkdtemp()
@@ -129,7 +153,7 @@ def main(profileOnly):
 	# Generate the package for each UE4-bundled thirdparty library
 	for lib in libs:
 		print("Generating and installing wrapper package for {}...".format(lib))
-		generate(lib, template, tempDir, channel, profile)
+		generate(lib, template, delegates, tempDir, channel, profile)
 	
 	# Attempt to remove the temporary directory
 	try:

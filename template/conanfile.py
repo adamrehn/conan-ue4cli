@@ -1,6 +1,10 @@
 from conans import ConanFile, tools
 import json, os
 
+# This will be replaced by a package-specific class with the
+# name `PackageDelegate` that provides any package-specific logic
+${DELEGATE_CLASS}
+
 class ${LIBNAME}Conan(ConanFile):
     name = "${LIBNAME}"
     version = "ue4"
@@ -9,6 +13,11 @@ class ${LIBNAME}Conan(ConanFile):
         "ue4lib/ue4@adamrehn/profile",
         "libcxx/ue4@adamrehn/profile"
     )
+    
+    def requirements(self):
+        
+        # Perform any package-specific requirements logic
+        PackageDelegate.post_requirements(self)
     
     def flags_filename(self):
         return os.path.join(self.package_folder, "flags.json")
@@ -57,6 +66,9 @@ class ${LIBNAME}Conan(ConanFile):
             "systemlibs":      systemLibs
         }
         tools.save(self.flags_filename(), json.dumps(flags))
+        
+        # Perform any package-specific post-build logic
+        PackageDelegate.post_build(self)
     
     def package_info(self):
         
@@ -70,3 +82,6 @@ class ${LIBNAME}Conan(ConanFile):
         # Export our static libraries and system libraries
         self.cpp_info.libs = tools.collect_libs(self)
         self.cpp_info.libs.extend(flags['systemlibs'])
+        
+        # Perform any package-specific post-info logic
+        PackageDelegate.post_info(self)
