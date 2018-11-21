@@ -21,8 +21,10 @@ setup(
 	zip_safe=False,
 	python_requires = '>=3.5',
 	install_requires = [
-		'ue4cli>=0.0.20',
-		'conan>=1.2.0'
+		'conan>=1.7.4',
+		'natsort>=4.0.0',
+		'networkx',
+		'ue4cli>=0.0.20'
 	],
 	package_data = {
 		'conan_ue4cli': [

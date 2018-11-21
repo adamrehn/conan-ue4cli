@@ -1,3 +1,4 @@
+from .build import build
 from .generate import generate
 import os, platform, sys
 
@@ -5,10 +6,14 @@ def main(manager, args):
 	
 	# Our supported subcommands
 	SUBCOMMANDS = {
+		'build': {
+			'function': build,
+			'description': 'Builds Conan packages that depend on conan-ue4cli wrappers'
+		},
 		'generate': {
 			'function': generate,
 			'description': 'Generates the UE4 Conan profile and associated packages'
-		},
+		}
 	}
 	
 	# Determine if a subcommand has been specified
