@@ -24,7 +24,9 @@ setup(
 		'conan>=1.7.4',
 		'natsort>=4.0.0',
 		'networkx',
-		'ue4cli>=0.0.20'
+		'setuptools',
+		'ue4cli>=0.0.20',
+		'wheel'
 	],
 	package_data = {
 		'conan_ue4cli': [

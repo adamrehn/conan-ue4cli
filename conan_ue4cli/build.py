@@ -273,7 +273,7 @@ def build(manager, argv):
 	)
 	parser.add_argument('--rebuild', action='store_true', help='Rebuild packages that already exist in the local Conan cache')
 	parser.add_argument('--dry-run', action='store_true', help='Print Conan commands instead of running them')
-	parser.add_argument('-s', '-source', action='append', dest='sources', metavar='DIR', help='Add the specified directory as an additional source of buildable package recipes')
+	parser.add_argument('-s', '-source', action='append', dest='sources', metavar='DIR', help='Add the specified directory as an additional source of buildable package recipes (the only source available by default is the current working directory)')
 	parser.add_argument('-user', default=DEFAULT_USER, help='Set the user for the built packages (default user is "{}")'.format(DEFAULT_USER))
 	parser.add_argument('-upload', default=None, metavar='REMOTE', help='Upload the built packages to the specified Conan remote')
 	parser.add_argument('package', nargs='+', help='Package(s) to build, in either NAME or NAME==VERSION format (specify "all" to build all available packages)')
