@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
 	name='conan-ue4cli',
-	version='0.0.1',
+	version='0.0.2',
 	description='ue4cli plugin providing Conan wrapper package functionality',
 	classifiers=[
 		'License :: OSI Approved :: MIT License',
