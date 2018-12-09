@@ -1,4 +1,5 @@
 import argparse, conans, copy, glob, os, platform, subprocess, tempfile
+from conans import tools
 from os import path
 
 class DelegateManager(object):
