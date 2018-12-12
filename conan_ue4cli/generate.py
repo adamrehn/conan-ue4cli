@@ -1,4 +1,5 @@
-import argparse, conans, copy, glob, os, platform, subprocess, tempfile
+import argparse, conans, copy, glob, os, platform, re, subprocess, tempfile
+from pkg_resources import parse_version
 from conans import tools
 from os import path
 
@@ -31,28 +32,45 @@ def _run(command, cwd=None, env=None):
 			'child process {} failed with exit code {}'.format(command, proc.returncode) +
 			'\nstdout: "{}"\nstderr: "{}"'.format(stdout, stderr)
 		)
+	
+	return (stdout, stderr)
+
+def _getClangVersion(clangPath):
+	'''
+	Retrieves the version number for the specified clang executable
+	'''
+	(stdout, stderr) = _run([clangPath, '--version'])
+	matches = re.search('clang version (.+) \\(', stdout)
+	return parse_version(matches[1].replace('-', '.'))
 
 def _detectClang(manager):
 	'''
-	Detects the presence of clang and returns a tuple containing the path to clang and the path to clang++
+	Detects the newest available version of clang and returns a tuple containing (clang, clang++, version)
 	'''
+	
+	# We need to gather the available versions of clang so we can select the newest version
+	versions = []
 	
 	# Check if clang is installed without any suffix
 	if conans.tools.which('clang++') != None:
-		return ('clang', 'clang++')
+		versions.append(('clang', 'clang++', _getClangVersion('clang++')))
 	
 	# Check if clang 3.8 or newer is installed with a version suffix
 	for ver in reversed(range(38, 60)):
 		suffix = '-{:.1f}'.format(ver / 10.0)
 		if conans.tools.which('clang++' + suffix) != None:
-			return ('clang' + suffix, 'clang++' + suffix)
+			versions.append(('clang' + suffix, 'clang++' + suffix, _getClangVersion('clang++' + suffix)))
 	
 	# Check if UE4 has a bundled version of clang (introduced in UE4.20.0)
-	# (Note that UBT only uses the bundled clang if a system clang is unavailable, so we also need to follow this behaviour)
 	engineRoot = manager.getEngineRoot()
 	bundledClang = glob.glob(os.path.join(engineRoot, 'Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/**/bin/clang'), recursive=True)
 	if len(bundledClang) != 0:
-		return (bundledClang[0], bundledClang[0] + '++')
+		versions.append((bundledClang[0], bundledClang[0] + '++', _getClangVersion(bundledClang[0] + '++')))
+	
+	# Sort the discovered clang executables in order of version and return the newest one
+	versions = sorted(versions, key = lambda v: v[2])
+	if len(versions) > 0:
+		return versions[-1]
 	
 	raise Exception('could not detect clang. Please ensure clang 3.8 or newer is installed.')
 
@@ -114,8 +132,8 @@ def generate(manager, argv):
 			clang = _detectClang(manager)
 			profileEnv['CC'] = clang[0]
 			profileEnv['CXX'] = clang[1]
-			print('Detected clang:   {}'.format(clang[0]))
-			print('Detected clang++: {}'.format(clang[1]))
+			print('\nDetected clang version {}:\n{}\n'.format(clang[2], clang[0]))
+			print('Detected clang++ version {}:\n{}\n'.format(clang[2], clang[1]))
 		
 		print('Removing the "{}" Conan profile if it already exists...'.format(profile))
 		profileFile = path.join(conans.paths.get_conan_user_home(), '.conan', 'profiles', profile)
