@@ -89,6 +89,18 @@ def _generateWrapper(libName, template, delegates, packageDir, channel, profile)
 	conans.tools.save(path.join(packageDir, 'conanfile.py'), conanfile)
 	_install(packageDir, channel, profile)
 
+def _removeProfile(profile):
+	'''
+	Removes the UE4 Conan profile if it exists, along with any profile-wide packages
+	'''
+	print('Removing the "{}" Conan profile if it already exists...'.format(profile))
+	profileFile = path.join(conans.paths.get_conan_user_home(), '.conan', 'profiles', profile)
+	if path.exists(profileFile):
+		os.unlink(profileFile)
+	
+	print('Removing any previous versions of profile base packages...')
+	_run(['conan', 'remove', '--force', '*@adamrehn/profile'])
+
 def generate(manager, argv):
 	
 	# Our supported command-line arguments
@@ -97,6 +109,7 @@ def generate(manager, argv):
 		description = 'Generates the UE4 Conan profile and associated packages'
 	)
 	parser.add_argument('--profile-only', action='store_true', help='Create the profile and base packages only, skipping wrapper package generation')
+	parser.add_argument('--remove-only', action='store_true', help='Remove any existing profile and base packages only, skipping creation of a new profile')
 	
 	# Parse the supplied command-line arguments
 	args = parser.parse_args(argv)
@@ -126,6 +139,13 @@ def generate(manager, argv):
 		# Use the Conan profile name "ue4" to maintain clean separation from the default Conan profile
 		profile = 'ue4'
 		
+		# Remove the UE4 Conan profile if it exists, along with any profile-wide packages
+		_removeProfile(profile)
+		
+		# If we are only removing the existing Conan profile, stop processing here
+		if args.remove_only == True:
+			return
+		
 		# Under Linux, make sure the ue4 Conan profile detects clang instead of GCC
 		profileEnv = copy.deepcopy(os.environ)
 		if platform.system() == 'Linux':
@@ -135,11 +155,6 @@ def generate(manager, argv):
 			print('\nDetected clang version {}:\n{}\n'.format(clang[2], clang[0]))
 			print('Detected clang++ version {}:\n{}\n'.format(clang[2], clang[1]))
 		
-		print('Removing the "{}" Conan profile if it already exists...'.format(profile))
-		profileFile = path.join(conans.paths.get_conan_user_home(), '.conan', 'profiles', profile)
-		if path.exists(profileFile):
-			os.unlink(profileFile)
-		
 		print('Creating "{}" Conan profile using autodetected settings...'.format(profile))
 		_run(['conan', 'profile', 'new', profile, '--detect'], env=profileEnv)
 		
@@ -148,9 +163,6 @@ def generate(manager, argv):
 			_run(['conan', 'profile', 'update', 'env.CC={}'.format(profileEnv['CC']), profile])
 			_run(['conan', 'profile', 'update', 'env.CXX={}'.format(profileEnv['CXX']), profile])
 			_run(['conan', 'profile', 'update', 'settings.compiler.libcxx=libc++', profile])
-		
-		print('Removing any previous versions of profile base packages...')
-		_run(['conan', 'remove', '--force', '*@adamrehn/profile'])
 		
 		print('Installing profile base packages...')
 		_install(path.join(packagesDir, 'ue4lib'), 'profile', profile)
