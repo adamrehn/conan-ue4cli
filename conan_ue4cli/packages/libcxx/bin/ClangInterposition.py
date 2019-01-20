@@ -11,7 +11,7 @@ def interpose(cxx):
 	
 	# If this is a link invocation, append our custom linker flags
 	if '---link' in args:
-		args.remove('---link')
+		args = list([arg for arg in args if arg != '---link'])
 		args.extend(shlex.split(os.environ["CLANG_INTERPOSE_LDFLAGS"]))
 	
 	# Forward all arguments to the real clang executable
