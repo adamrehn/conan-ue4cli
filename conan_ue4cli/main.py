@@ -1,5 +1,6 @@
 from .build import build
 from .generate import generate
+from .update import update
 import os, platform, sys
 
 def main(manager, args):
@@ -13,6 +14,10 @@ def main(manager, args):
 		'generate': {
 			'function': generate,
 			'description': 'Generates the UE4 Conan profile and associated packages'
+		},
+		'update': {
+			'function': update,
+			'description': 'Caches the latest recipe data from the ue4-conan-recipes repo'
 		}
 	}
 	

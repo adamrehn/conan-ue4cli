@@ -1,7 +1,9 @@
 import argparse, glob, importlib.util, inspect, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
 from os.path import abspath, basename, dirname, exists, join
+from .RecipeCache import RecipeCache
 from collections import deque
 from natsort import natsorted
+from .update import update
 import networkx as nx
 
 # The default username used when building packages
@@ -273,7 +275,8 @@ def build(manager, argv):
 	)
 	parser.add_argument('--rebuild', action='store_true', help='Rebuild packages that already exist in the local Conan cache')
 	parser.add_argument('--dry-run', action='store_true', help='Print Conan commands instead of running them')
-	parser.add_argument('-s', '-source', action='append', dest='sources', metavar='DIR', help='Add the specified directory as an additional source of buildable package recipes (the only source available by default is the current working directory)')
+	parser.add_argument('--no-cache', action='store_true', help='Do not add the conan-ue4cli recipe cache to the list of default recipe sources')
+	parser.add_argument('-s', '-source', action='append', dest='sources', metavar='DIR', help='Add the specified directory as an additional source of buildable package recipes (the only sources available by default are the conan-ue4cli recipe cache and the current working directory)')
 	parser.add_argument('-user', default=DEFAULT_USER, help='Set the user for the built packages (default user is "{}")'.format(DEFAULT_USER))
 	parser.add_argument('-upload', default=None, metavar='REMOTE', help='Upload the built packages to the specified Conan remote')
 	parser.add_argument('package', nargs='+', help='Package(s) to build, in either NAME or NAME==VERSION format (specify "all" to build all available packages)')
@@ -287,8 +290,16 @@ def build(manager, argv):
 	# Create an auto-deleting temporary directory to hold our aggregated recipe sources
 	with tempfile.TemporaryDirectory() as tempDir:
 		
+		# Determine if we are including the recipe cache directory in our list of source directories
+		cacheDir = RecipeCache.getCacheDirectory()
+		defaultSources = [os.getcwd()] + ([cacheDir] if args.no_cache == False else [])
+		
+		# If the recipe cache directory does not exist (usually because this is our first build), then update it
+		if args.no_cache == False and os.path.exists(cacheDir) == False:
+			update(manager, argv)
+		
 		# Iterate over our source directories and copy our recipes to the temp directory
-		sources = [os.getcwd()] + (args.sources if args.sources is not None else [])
+		sources = defaultSources + (args.sources if args.sources is not None else [])
 		for source in sources:
 			for recipe in Utility.listPackagesInDir(source):
 				shutil.copytree(join(source, recipe), join(tempDir, recipe))
