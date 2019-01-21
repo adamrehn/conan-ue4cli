@@ -302,7 +302,11 @@ def build(manager, argv):
 		sources = defaultSources + (args.sources if args.sources is not None else [])
 		for source in sources:
 			for recipe in Utility.listPackagesInDir(source):
-				shutil.copytree(join(source, recipe), join(tempDir, recipe))
+				try:
+					shutil.copytree(join(source, recipe), join(tempDir, recipe))
+				except FileExistsError as e:
+					conflict = basename(str(e).split(': ')[-1].strip('"\''))
+					raise RuntimeError('conflicting source directories detected for recipe {}'.format(conflict)) from None
 		
 		# Create our package builder
 		builder = PackageBuilder(tempDir, args.user, channel, 'ue4', args.rebuild, args.dry_run)
