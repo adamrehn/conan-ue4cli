@@ -29,6 +29,8 @@ ue4 conan generate
 
 A Conan profile named `ue4` will be created to maintain clean separation from the default Conan profile, and wrapper packages for all of the third-party libraries bundled with the detected UE4 installation will be generated and installed into the local Conan cache.
 
+Note that you will need to use a source build of UE4 to generate wrapper packages rather than an Installed Build (such as those obtained via the Epic Games Launcher), since Installed Builds do not contain all of the files necessary for wrapper generation. Fortunately, you don't actually need to have built UE4 from source for this to work, you can simply clone the source code and run `Setup.bat`/`Setup.sh` to download the required third-party dependencies and conan-ue4cli can generate the wrappers from the source tree.
+
 
 Building packages that use the wrappers
 ---------------------------------------
