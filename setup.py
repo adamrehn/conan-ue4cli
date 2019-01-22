@@ -25,7 +25,7 @@ setup(
 		'natsort>=4.0.0',
 		'networkx',
 		'setuptools',
-		'ue4cli>=0.0.20',
+		'ue4cli>=0.0.24',
 		'wheel'
 	],
 	package_data = {

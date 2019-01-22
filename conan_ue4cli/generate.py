@@ -1,4 +1,4 @@
-import argparse, conans, copy, glob, os, platform, re, subprocess, tempfile
+import argparse, conans, copy, glob, os, platform, re, subprocess, sys, tempfile
 from pkg_resources import parse_version
 from conans import tools
 from os import path
@@ -173,6 +173,22 @@ def generate(manager, argv):
 		if args.profile_only == True:
 			print('Skipping wrapper package generation.')
 			return
+		
+		# Verify that we are not attempting to generate wrapper packages for an Installed Build of the Engine
+		if manager.isInstalledBuild() == True:
+			print('\n'.join([
+				'',
+				'Error: attempting to generate wrappers using an Installed Build of UE4!',
+				'',
+				'Installed Builds do not contain all the files necessary for wrapper generation.',
+				'Please use `ue4 setroot` to point ue4cli to the root of the UE4 source tree.',
+				'Be sure to have run Setup.{} first to download all third-party dependencies.'.format('bat' if platform.system() == 'Windows' else 'sh'),
+				'',
+				'Once the wrappers are generated, you can point ue4cli back to the Installed',
+				'Build and run `ue4 conan generate --profile-only` to ensure the "{}" Conan'.format(profile),
+				'profile reflects the settings for the Installed Build and not the source tree.'
+			]), file=sys.stderr)
+			sys.exit(1)
 		
 		# Use the short form of the UE4 version string (e.g 4.19) as the channel for our installed packages
 		channel = manager.getEngineVersion('short')
