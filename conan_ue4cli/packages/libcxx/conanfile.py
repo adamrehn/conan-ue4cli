@@ -24,8 +24,10 @@ class LibCxxConan(ConanFile):
             compilerFlags = libcxx.combined_compiler_flags()
             linkerFlags = libcxx.combined_linker_flags()
             
-            # Inject our custom clang wrapper into the relevant build-related environment variables
-            # (This allows the use of UE4 libc++ to be transparent when building consumer packages)
+            # Store the path to our custom clang wrapper in the relevant build-related environment variables.
+            # The UE4 Conan profile will override CC and CXX with the correct clang for the UE4 installation being used, and
+            # LibCxx.set_vars() will then populate REAL_CC and REAL_CXX with the correct paths when UE4-compatible packages are built.
+            # (This allows the use of UE4 libc++ to be transparent to build systems such as CMake and GNU Autotools.)
             self.env_info.REAL_CC = os.environ["CC"] if "CC" in os.environ else "cc"
             self.env_info.REAL_CXX = os.environ["CXX"] if "CXX" in os.environ else "c++"
             self.env_info.CLANG_INTERPOSE_CXXFLAGS = compilerFlags
@@ -38,6 +40,7 @@ class LibCxxConan(ConanFile):
             
             # Ensure our wrapper scripts are executable
             self.run("chmod +x {}/bin/clang.py {}/bin/clang++.py".format(self.package_folder, self.package_folder))
-            
-        # Since a Conan profile can override environment variables from recipes, we provide functionality to restore them
+        
+        # Since the UE4 Conan profile will provide the path to clang for the current Engine installation,
+        # UE4-compatible packages will need to call LibCxx.set_vars() to enable our compiler interposition
         self.env_info.PYTHONPATH.append(self.package_folder)

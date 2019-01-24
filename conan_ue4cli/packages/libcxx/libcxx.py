@@ -5,8 +5,8 @@ class LibCxx(object):
     @staticmethod
     def set_vars(conanFile):
         """
-        Applies the necessary overrides to use the UE4-bundled version of libc++ under Linux,
-        even when the current conan profile has overridden the CC and CXX environment variables
+        Applies the necessary overrides to use the UE4-bundled version of libc++ under Linux, using
+        the CC and CXX environment variables from the current Conan profile to locate the real clang
         """
         if conanFile.settings.os == "Linux":
             
@@ -27,10 +27,10 @@ class LibCxx(object):
     @staticmethod
     def fix_autotools(autotools):
         """
-        Fixes the linker flags for the conan autotools build helper to work with UE4 libs
+        Fixes the linker flags for the Conan Autotools build helper to work with UE4 libs
         """
         
-        # Since conan's autotools build helper prefixes all libraries with `-l`,
+        # Since Conan's Autotools build helper prefixes all libraries with `-l`,
         # move any absolute library filenames (such as UE4 libs) to the raw linker flags
         isAbsLib = lambda lib: '.' in os.path.basename(lib)
         absLibs = list([lib for lib in autotools.libs if isAbsLib(lib)])
