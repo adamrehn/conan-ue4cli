@@ -1,5 +1,6 @@
-import argparse, glob, importlib.util, inspect, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
+import argparse, glob, importlib.util, io, inspect, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
 from os.path import abspath, basename, dirname, exists, join
+from conans.client.output import ConanOutput
 from .RecipeCache import RecipeCache
 from collections import deque
 from natsort import natsorted
@@ -143,7 +144,7 @@ class PackageBuilder(object):
 		module = Utility.importFile('conanfile', self.getConanfile(package))
 		classes = inspect.getmembers(module, inspect.isclass)
 		recipes = list([c[1] for c in classes if 'ConanFile' in Utility.baseNames(c[1])])
-		recipe = recipes[0](None, None, user=self.user, channel=self.channel)
+		recipe = recipes[0](ConanOutput(io.StringIO()), None, user=self.user, channel=self.channel)
 		
 		# Extract the list of dependencies
 		dependencies = list(recipe.requires)
