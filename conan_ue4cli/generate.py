@@ -21,13 +21,13 @@ class DelegateManager(object):
 		
 		return self.defaultDelegate
 
-def _run(command, cwd=None, env=None):
+def _run(command, cwd=None, env=None, check=True):
 	'''
 	Executes a command and raises an exception if it fails
 	'''
 	proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, universal_newlines=True)
 	(stdout, stderr) = proc.communicate(input)
-	if proc.returncode != 0:
+	if proc.returncode != 0 and check == True:
 		raise Exception(
 			'child process {} failed with exit code {}'.format(command, proc.returncode) +
 			'\nstdout: "{}"\nstderr: "{}"'.format(stdout, stderr)
@@ -197,7 +197,7 @@ def generate(manager, argv):
 		libs = [lib for lib in manager.listThirdPartyLibs() if lib != 'libc++']
 		
 		print('Removing any previous versions of generated wrapper packages for {}...'.format(channel))
-		_run(['conan', 'remove', '--force', '*/ue4@adamrehn/{}'.format(channel)])
+		_run(['conan', 'remove', '--force', '*/ue4@adamrehn/{}'.format(channel)], check=False)
 		
 		# Generate the package for each UE4-bundled thirdparty library
 		for lib in libs:
