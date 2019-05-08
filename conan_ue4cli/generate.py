@@ -41,7 +41,7 @@ def _getClangVersion(clangPath):
 	'''
 	(stdout, stderr) = _run([clangPath, '--version'])
 	matches = re.search('clang version (.+) \\(', stdout)
-	return parse_version(matches[1].replace('-', '.'))
+	return parse_version(matches.group(1).replace('-', '.'))
 
 def _detectClang(manager):
 	'''
