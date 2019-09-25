@@ -1,4 +1,4 @@
-import argparse, glob, importlib.util, io, inspect, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
+import argparse, glob, importlib.util, io, inspect, itertools, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
 from os.path import abspath, basename, dirname, exists, join
 from conans.client.output import ConanOutput
 from .RecipeCache import RecipeCache
@@ -218,12 +218,13 @@ class PackageBuilder(object):
 		except:
 			return False
 	
-	def buildPackage(self, package):
+	def buildPackage(self, package, options=[]):
 		'''
 		Builds an individual package
 		'''
 		packageDir = dirname(self.getConanfile(package))
-		if self.execute(['conan', 'create', packageDir, '{}/{}'.format(self.user, self.channel), '--profile', self.profile]) == False:
+		optionsArgs = list(itertools.chain.from_iterable([['-o', option] for option in options]))
+		if self.execute(['conan', 'create'] + optionsArgs + [packageDir, '{}/{}'.format(self.user, self.channel), '--profile', self.profile]) == False:
 			raise RuntimeError('failed to build package "{}"'.format(package))
 	
 	def uploadPackage(self, package, remote):
@@ -251,13 +252,13 @@ class PackageBuilder(object):
 		else:
 			return list([p for p in buildOrder if self.isPackageInCache(p) == False])
 	
-	def buildPackages(self, buildOrder):
+	def buildPackages(self, buildOrder, options=[]):
 		'''
 		Builds a list of packages using a pre-computed build order
 		'''
 		for package in buildOrder:
 			print('\nBuilding package "{}"...'.format(package))
-			self.buildPackage(package)
+			self.buildPackage(package, options)
 	
 	def uploadPackages(self, packages, remote):
 		'''
@@ -278,6 +279,7 @@ def build(manager, argv):
 	parser.add_argument('--dry-run', action='store_true', help='Print Conan commands instead of running them')
 	parser.add_argument('--no-cache', action='store_true', help='Do not add the conan-ue4cli recipe cache to the list of default recipe sources')
 	parser.add_argument('-s', '-source', action='append', dest='sources', metavar='DIR', help='Add the specified directory as an additional source of buildable package recipes (the only sources available by default are the conan-ue4cli recipe cache and the current working directory)')
+	parser.add_argument('-o', '-option', action='append', dest='options', metavar='PKG:OPTION=VALUE', help='Specify options to pass to package recipes when building them (does not affect dependency resolution)')
 	parser.add_argument('-user', default=DEFAULT_USER, help='Set the user for the built packages (default user is "{}")'.format(DEFAULT_USER))
 	parser.add_argument('-upload', default=None, metavar='REMOTE', help='Upload the built packages to the specified Conan remote')
 	parser.add_argument('package', nargs='+', help='Package(s) to build, in either NAME or NAME==VERSION format (specify "all" to build all available packages)')
@@ -337,7 +339,7 @@ def build(manager, argv):
 			print('\t' + package)
 		
 		# Attempt to build the packages
-		builder.buildPackages(buildOrder)
+		builder.buildPackages(buildOrder, args.options if args.options is not None else [])
 		
 		# If a remote has been specified to upload the built packages to, attempt to do so
 		if args.upload is not None:
