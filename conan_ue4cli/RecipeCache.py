@@ -1,6 +1,6 @@
 from .PluginConfiguration import PluginConfiguration
 from conans import tools
-import os, shutil
+import inspect, os, shutil
 
 # The URL from which we retrieve the zip file containing the latest recipe data
 RECIPE_ZIP_URL = 'https://github.com/adamrehn/ue4-conan-recipes/archive/master.zip'
@@ -35,8 +35,9 @@ class RecipeCache(object):
 		
 		# Ensure Conan's global configuration object is not `None` when using Conan 1.22.0 or newer
 		if hasattr(tools, 'get_global_instances') and hasattr(tools, 'set_global_instances'):
-			instances = tools.get_global_instances()
-			tools.set_global_instances(the_output=instances[0], the_requester=instances[1], config=DummyConfig())
+			if 'config' in inspect.signature(tools.set_global_instances).parameters:
+				instances = tools.get_global_instances()
+				tools.set_global_instances(the_output=instances[0], the_requester=instances[1], config=DummyConfig())
 		
 		# Remove the cache directory if it already exists
 		cacheDir = RecipeCache.getCacheDirectory()
