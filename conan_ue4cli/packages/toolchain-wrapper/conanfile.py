@@ -5,6 +5,10 @@ from os.path import dirname, join
 class ToolchainWrapper(ConanFile):
     name = "toolchain-wrapper"
     version = "ue4"
+    description = "Wraps a clang compiler toolchain, libc++ and a minimal CentOS 7 sysroot"
+    url = "https://github.com/adamrehn/conan-ue4cli/tree/master/conan_ue4cli/packages/toolchain-wrapper"
+    homepage = "https://llvm.org/"
+    license = "Apache-2.0"
     settings = "os", "compiler", "arch"
     exports = "*.py"
     
