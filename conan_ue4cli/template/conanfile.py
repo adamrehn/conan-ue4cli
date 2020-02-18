@@ -9,10 +9,7 @@ class ${LIBNAME}Conan(ConanFile):
     name = "${LIBNAME}"
     version = "ue4"
     settings = "os", "compiler", "build_type", "arch"
-    requires = (
-        "ue4lib/ue4@adamrehn/profile",
-        "libcxx/ue4@adamrehn/profile"
-    )
+    requires = ("ue4lib/ue4@adamrehn/profile")
     
     def requirements(self):
         

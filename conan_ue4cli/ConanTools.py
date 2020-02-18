@@ -25,6 +25,22 @@ class ConanTools(object):
 		return tools.get(*args, **kwargs)
 	
 	@staticmethod
+	def load(*args, **kwargs):
+		'''
+		Wraps `conans.tools.load()`
+		'''
+		ConanTools._configureConan()
+		return tools.load(*args, **kwargs)
+	
+	@staticmethod
+	def save(*args, **kwargs):
+		'''
+		Wraps `conans.tools.save()`
+		'''
+		ConanTools._configureConan()
+		return tools.save(*args, **kwargs)
+	
+	@staticmethod
 	def _configureConan():
 		'''
 		Ensures Conan is configured correctly so we can use its utility functionality from outside recipes
