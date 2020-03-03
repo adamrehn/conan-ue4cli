@@ -161,6 +161,11 @@ def generate(manager, argv):
 		# Embed the Unreal Engine version string in the ue4 Conan profile so it can be retrieved later if needed
 		_run(['conan', 'profile', 'update', 'env.UNREAL_ENGINE_VERSION={}'.format(channel), profile])
 		
+		print('Installing profile base packages...')
+		_install(join(packagesDir, 'ue4lib'), 'profile', profile)
+		_install(join(packagesDir, 'libcxx'), 'profile', profile)
+		_install(join(packagesDir, 'ue4util'), 'profile', profile)
+		
 		# Apply our Linux-specific profile modifications
 		if platform.system() == 'Linux':
 			
@@ -172,11 +177,6 @@ def generate(manager, argv):
 			profileConfig = ConanTools.load(profilePath)
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
-		
-		print('Installing profile base packages...')
-		_install(join(packagesDir, 'ue4lib'), 'profile', profile)
-		_install(join(packagesDir, 'libcxx'), 'profile', profile)
-		_install(join(packagesDir, 'ue4util'), 'profile', profile)
 		
 		# If we are only creating the Conan profile, stop processing here
 		if args.profile_only == True:
