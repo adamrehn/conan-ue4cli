@@ -161,9 +161,17 @@ def generate(manager, argv):
 		# Embed the Unreal Engine version string in the ue4 Conan profile so it can be retrieved later if needed
 		_run(['conan', 'profile', 'update', 'env.UNREAL_ENGINE_VERSION={}'.format(channel), profile])
 		
-		# Under Linux, update the ue4 Conan profile to ensure libc++ is specified as the C++ standard library
+		# Apply our Linux-specific profile modifications
 		if platform.system() == 'Linux':
+			
+			# Update the ue4 Conan profile to ensure libc++ is specified as the C++ standard library
 			_run(['conan', 'profile', 'update', 'settings.compiler.libcxx=libc++', profile])
+			
+			# Update the ue4 Conan profile to add the toolchain wrapper package as a build requirement for all packages
+			profilePath = expanduser('~/.conan/profiles/{}'.format(profile))
+			profileConfig = ConanTools.load(profilePath)
+			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
+			ConanTools.save(profilePath, profileConfig)
 		
 		print('Installing profile base packages...')
 		_install(join(packagesDir, 'ue4lib'), 'profile', profile)
@@ -212,12 +220,6 @@ def generate(manager, argv):
 				'--env', 'WRAPPED_TOOLCHAIN={}'.format(dirname(dirname(clang))),
 				'--env', 'WRAPPED_LIBCXX={}'.format(dirname(dirname(dirname(dirname(libcxx)))))
 			])
-			
-			# Update the ue4 Conan profile to add the toolchain wrapper package as a build requirement for all packages
-			profilePath = expanduser('~/.conan/profiles/{}'.format(profile))
-			profileConfig = ConanTools.load(profilePath)
-			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
-			ConanTools.save(profilePath, profileConfig)
 		
 		# Generate the package for each UE4-bundled thirdparty library
 		for lib in libs:
