@@ -1,15 +1,13 @@
 from conans import ConanFile, tools
-import os
 
 class LibCxxConan(ConanFile):
     name = "libcxx"
     version = "ue4"
-    settings = "os", "compiler", "arch"
-    requires = "ue4lib/ue4@adamrehn/profile"
     exports = "*.py"
+    build_policy = "missing"
     
     def package(self):
-        self.copy("*")
+        self.copy("*.py")
     
     def package_info(self):
         
