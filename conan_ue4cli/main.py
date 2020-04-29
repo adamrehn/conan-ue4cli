@@ -1,3 +1,4 @@
+from .boilerplate import boilerplate
 from .build import build
 from .generate import generate
 from .update import update
@@ -7,6 +8,10 @@ def main(manager, args):
 	
 	# Our supported subcommands
 	SUBCOMMANDS = {
+		'boilerplate': {
+			'function': boilerplate,
+			'description': 'Generates UE4 modules with boilerplate code for wrapping external dependencies'
+		},
 		'build': {
 			'function': build,
 			'description': 'Builds Conan packages that depend on conan-ue4cli wrappers'

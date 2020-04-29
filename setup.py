@@ -1,8 +1,13 @@
+from os.path import abspath, dirname, join
 from setuptools import setup
+
+# Read the version number from version.py
+with open(abspath(join(dirname(__file__), 'conan_ue4cli', 'version.py'))) as versionFile:
+	__version__ = versionFile.read().strip().replace('__version__ = ', '').replace("'", '')
 
 setup(
 	name='conan-ue4cli',
-	version='0.0.21',
+	version=__version__,
 	description='ue4cli plugin providing Conan wrapper package functionality',
 	classifiers=[
 		'License :: OSI Approved :: MIT License',
@@ -32,7 +37,8 @@ setup(
 		'conan_ue4cli': [
 			'*/*.py',
 			'*/*/*.py',
-			'*/*/*/*.py'
+			'*/*/*/*.py',
+			'*/*/*.cs'
 		]
 	},
 	entry_points = {
