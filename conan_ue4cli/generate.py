@@ -1,4 +1,4 @@
-import argparse, conans, copy, glob, os, platform, re, subprocess, sys, tempfile
+import argparse, conans, copy, glob, os, platform, re, shutil, subprocess, sys, tempfile
 from os.path import abspath, basename, dirname, exists, expanduser, join
 from pkg_resources import parse_version
 from .ConanTools import ConanTools
@@ -98,6 +98,22 @@ def _removeProfile(profile):
 	print('Removing any previous versions of profile base packages...')
 	_run(['conan', 'remove', '--force', '*@adamrehn/profile'])
 
+def _duplicateProfile(source, dest):
+	'''
+	Duplicates an existing Conan profile
+	'''
+	
+	# Remove the destination profile if it already exists
+	profileDir = join(conans.paths.get_conan_user_home(), '.conan', 'profiles')
+	sourceProfile = join(profileDir, source)
+	destProfile = join(profileDir, dest)
+	if os.path.exists(destProfile):
+		os.unlink(destProfile)
+	
+	# Perform the copy
+	print('Copying the "{}" Conan profile into a new profile named "{}"...'.format(source, dest))
+	shutil.copy2(sourceProfile, destProfile)
+
 def generate(manager, argv):
 	
 	# Our supported command-line arguments
@@ -177,6 +193,10 @@ def generate(manager, argv):
 			profileConfig = ConanTools.load(profilePath)
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
+		
+		# Duplicate the plain "ue4" profile with an appropriate target suffix for the host platform
+		# (This naming scheme will become more useful in future when we support cross-compilation rather than always targeting the host platform)
+		_duplicateProfile(profile, profile + '-' + manager.getPlatformIdentifier())
 		
 		# If we are only creating the Conan profile, stop processing here
 		if args.profile_only == True:
