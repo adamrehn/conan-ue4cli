@@ -29,7 +29,7 @@ public class ${MODULE} : ModuleRules
 		return id;
 	}
 	
-	//Determines if the target platform is a Windows target
+	//Determines if a target's platform is a Windows target platform
 	private bool IsWindows(ReadOnlyTargetRules target) {
 		return (target.Platform == UnrealTargetPlatform.Win32 || Target.Platform == UnrealTargetPlatform.Win64);
 	}
@@ -63,20 +63,65 @@ public class ${MODULE} : ModuleRules
 		}
 	}
 	
+	//Determines if we have precomputed dependency data for the specified target, and processes it if we do
+	private bool ProcessPrecomputedData(ReadOnlyTargetRules target)
+	{
+		//Resolve the paths to the files and directories that will exist if we have precomputed data for the target
+		string targetID = this.TargetIdentifier(target);
+		string flagsFile = Path.Combine(ModuleDirectory, targetID, "flags.json");
+		string includeDir = Path.Combine(ModuleDirectory, targetID, "include");
+		string libDir = Path.Combine(ModuleDirectory, targetID, "lib");
+		
+		//If any of the required files or directories do not exist then we do not have precomputed data
+		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir)) {
+			return false;
+		}
+		
+		//Add the precomputed include directory to our search paths
+		PublicIncludePaths.Add(includeDir);
+		
+		//Link against all static library files in the lib directory
+		string libExtension = ((this.IsWindows(target)) ? ".lib" : ".a");
+		string[] libs = Directory.GetFiles(libDir, "*" + libExtension);
+		foreach(string lib in libs) {
+			PublicAdditionalLibraries.Add(lib);
+		}
+		
+		//Attempt to parse the JSON file containing any additional flags and system libraries
+		JsonObject flags = JsonObject.Read(new FileReference(flagsFile));
+		
+		//Add any preprocessor definitions specified by the JSON file
+		PublicDefinitions.AddRange(flags.GetStringArrayField("defines"));
+		
+		//Link against any system libraries specified by the JSON file, ensuring we add the file extension under Windows
+		string[] systemLibs = flags.GetStringArrayField("libs");
+		foreach (string lib in systemLibs)
+		{
+			string libFull = lib + ((this.IsWindows(target)) ? libExtension : "");
+			PublicAdditionalLibraries.Add(libFull);
+		}
+		
+		return true;
+	}
+	
 	public ${MODULE}(ReadOnlyTargetRules Target) : base(Target)
 	{
 		Type = ModuleType.External;
 		
-		//Install third-party dependencies using Conan
-		Process.Start(new ProcessStartInfo
+		//Determine if we have precomputed dependency data for the target that is being built
+		if (this.ProcessPrecomputedData(Target) == false)
 		{
-			FileName = "conan",
-			Arguments = "install . --profile ue4-" + this.TargetIdentifier(Target),
-			WorkingDirectory = ModuleDirectory
-		})
-		.WaitForExit();
-		
-		//Link against our Conan-installed dependencies
-		this.ProcessDependencies(Path.Combine(ModuleDirectory, "conanbuildinfo.json"), Target);
+			//No precomputed data detected, install third-party dependencies using Conan
+			Process.Start(new ProcessStartInfo
+			{
+				FileName = "conan",
+				Arguments = "install . --profile ue4-" + this.TargetIdentifier(Target),
+				WorkingDirectory = ModuleDirectory
+			})
+			.WaitForExit();
+			
+			//Link against our Conan-installed dependencies
+			this.ProcessDependencies(Path.Combine(ModuleDirectory, "conanbuildinfo.json"), Target);
+		}
 	}
 }
