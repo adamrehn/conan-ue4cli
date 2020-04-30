@@ -33,7 +33,7 @@ public class ${MODULE} : ModuleRules
 	private void ProcessDependencies(string depsJson, ReadOnlyTargetRules target)
 	{
 		//We need to ensure libraries end with ".lib" under Windows
-		string libSuffix = ((target.IsInPlatformGroup(UnrealPlatformGroup.Windows))) ? ".lib" : "");
+		string libSuffix = ((target.IsInPlatformGroup(UnrealPlatformGroup.Windows)) ? ".lib" : "");
 		
 		//Attempt to parse the JSON file
 		JsonObject deps = JsonObject.Read(new FileReference(depsJson));
