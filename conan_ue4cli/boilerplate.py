@@ -56,4 +56,4 @@ def boilerplate(manager, argv):
 	
 	# Create an empty Conanfile for the generated module
 	conanfile = join(moduleDir, 'conanfile.txt')
-	ConanTools.save(conanfile, '\n')
+	ConanTools.save(conanfile, '[requires]\n\n[generators]\njson\n')
