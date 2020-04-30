@@ -86,12 +86,24 @@ def _generateWrapper(libName, template, delegates, packageDir, channel, profile)
 	ConanTools.save(join(packageDir, 'conanfile.py'), conanfile)
 	_install(packageDir, channel, profile)
 
+def _conanProfileDir():
+	'''
+	Returns the path to the Conan profiles directory
+	'''
+	return join(conans.paths.get_conan_user_home(), '.conan', 'profiles')
+
+def _conanProfileFile(profile):
+	'''
+	Resolves the path to the file for the specified Conan profile
+	'''
+	return join(_conanProfileDir(), profile)
+
 def _removeProfile(profile):
 	'''
 	Removes the UE4 Conan profile if it exists, along with any profile-wide packages
 	'''
 	print('Removing the "{}" Conan profile if it already exists...'.format(profile))
-	profileFile = join(conans.paths.get_conan_user_home(), '.conan', 'profiles', profile)
+	profileFile = _conanProfileFile(profile)
 	if exists(profileFile):
 		os.unlink(profileFile)
 	
@@ -104,9 +116,8 @@ def _duplicateProfile(source, dest):
 	'''
 	
 	# Remove the destination profile if it already exists
-	profileDir = join(conans.paths.get_conan_user_home(), '.conan', 'profiles')
-	sourceProfile = join(profileDir, source)
-	destProfile = join(profileDir, dest)
+	sourceProfile = _conanProfileFile(source)
+	destProfile = _conanProfileFile(dest)
 	if os.path.exists(destProfile):
 		os.unlink(destProfile)
 	
@@ -189,7 +200,7 @@ def generate(manager, argv):
 			_run(['conan', 'profile', 'update', 'settings.compiler.libcxx=libc++', profile])
 			
 			# Update the ue4 Conan profile to add the toolchain wrapper package as a build requirement for all packages
-			profilePath = expanduser('~/.conan/profiles/{}'.format(profile))
+			profilePath = _conanProfileFile(profile)
 			profileConfig = ConanTools.load(profilePath)
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
