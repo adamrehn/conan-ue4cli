@@ -1,4 +1,4 @@
-import argparse, os, sys
+import argparse, os, re, sys
 from .ConanTools import ConanTools
 from .version import __version__
 from os.path import abspath, dirname, join
@@ -39,8 +39,10 @@ def boilerplate(manager, argv):
 	template = ConanTools.load(join(templateDir, 'v{}'.format(templateVersion), 'Template.Build.cs'))
 	
 	# Sanitise the module name to ensure it represents a valid C# identifier
-	# TODO
-	moduleName = args.name
+	validStart = re.compile('[_|\D]')
+	moduleName = re.sub('\W', '', args.name)
+	while validStart.match(moduleName, 0, 1) is None:
+		moduleName = moduleName[1:]
 	
 	# Fill out the template contents
 	template = template.replace('${VERSION}', __version__)
