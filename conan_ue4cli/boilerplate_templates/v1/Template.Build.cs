@@ -12,12 +12,21 @@ using Tools.DotNETCommon;
 
 public class ${MODULE} : ModuleRules
 {
-	//Returns the identifier string for the given target, which includes its platform and its architecture (if specified)
+	//Returns the identifier string for the given target, which includes its platform, architecture (if specified), and debug CRT status
 	private string TargetIdentifier(ReadOnlyTargetRules target)
 	{
-		return (target.Architecture != null && target.Architecture.Length > 0) ?
+		//Append the target's architecture to its platform name if an architecture was specified
+		string id = (target.Architecture != null && target.Architecture.Length > 0) ?
 			String.Format("{0}-{1}", target.Platform.ToString(), target.Architecture) :
 			target.Platform.ToString();
+		
+		//Append a debug suffix for Windows debug targets that actually use the debug CRT
+		bool isDebug = (target.Configuration == UnrealTargetConfiguration.Debug || target.Configuration == UnrealTargetConfiguration.DebugGame);
+		if (isDebug && target.bDebugBuildsActuallyUseDebugCRT) {
+			id += "-Debug";
+		}
+		
+		return id;
 	}
 	
 	//Determines if the target platform is a Windows target
