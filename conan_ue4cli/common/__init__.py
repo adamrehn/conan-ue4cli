@@ -1,4 +1,5 @@
 from .ConanTools import ConanTools
+from .DelegateManager import DelegateManager
 from .PackageBuilder import PackageBuilder
 from .PackageManagement import PackageManagement
 from .PluginConfiguration import PluginConfiguration

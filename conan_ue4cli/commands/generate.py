@@ -1,25 +1,7 @@
-import argparse, conans, copy, glob, os, platform, re, shutil, subprocess, sys, tempfile
-from os.path import abspath, basename, dirname, exists, expanduser, join
+from ..common import ConanTools, DelegateManager, PackageManagement, ProfileManagement, Utility
+import argparse, copy, glob, os, platform, re, sys, tempfile
+from os.path import abspath, dirname, exists, join
 from pkg_resources import parse_version
-from ..common import ConanTools, PackageManagement, ProfileManagement, Utility
-
-class DelegateManager(object):
-	def __init__(self, delegatesDir):
-		
-		# Read the contents of the default (no-op) delegate class for generated packages
-		self.delegatesDir = delegatesDir
-		self.defaultDelegate = ConanTools.load(join(self.delegatesDir, '__default.py'))
-	
-	def getDelegateClass(self, libName):
-		'''
-		Retrieves the delegate class code for the specified package (if one exists),
-		or else returns the default (no-op) delegate class
-		'''
-		delegateFile = join(self.delegatesDir, '{}.py'.format(libName))
-		if exists(delegateFile):
-			return ConanTools.load(delegateFile)
-		
-		return self.defaultDelegate
 
 def _getClangVersion(clangPath):
 	'''
@@ -93,7 +75,7 @@ def generate(manager, argv):
 	with tempfile.TemporaryDirectory() as tempDir:
 		
 		# Use the Conan profile name "ue4" to maintain clean separation from the default Conan profile
-		profile = 'ue4'
+		profile = ProfileManagement.defaultProfile()
 		
 		# Remove the UE4 Conan profile if it exists, along with any profile-wide packages
 		print('Removing the "{}" Conan profile if it already exists...'.format(profile))

@@ -1,6 +1,6 @@
 import argparse, os, shutil, tempfile
 from os.path import basename, exists, join
-from ..common import PackageBuilder, RecipeCache, Utility
+from ..common import PackageBuilder, ProfileManagement, RecipeCache, Utility
 from .update import update
 
 # The default username used when building packages
@@ -20,13 +20,14 @@ def build(manager, argv):
 	parser.add_argument('-o', '-option', action='append', dest='options', metavar='PKG:OPTION=VALUE', help='Specify options to pass to package recipes when building them (does not affect dependency resolution)')
 	parser.add_argument('-user', default=DEFAULT_USER, help='Set the user for the built packages (default user is "{}")'.format(DEFAULT_USER))
 	parser.add_argument('-upload', default=None, metavar='REMOTE', help='Upload the built packages to the specified Conan remote')
+	parser.add_argument('-p', '-profile', dest='profile', metavar='PROFILE', default=ProfileManagement.defaultProfile(), choices=ProfileManagement.listGeneratedProfiles(), help='Build packages using the specified Conan profile (defaults to the profile for the host platform and most Unreal Engine installation used to perform profile generation)')
 	parser.add_argument('package', nargs='+', help='Package(s) to build, in either NAME or NAME==VERSION format (specify "all" to build all available packages)')
 	
 	# Parse the supplied command-line arguments
 	args = parser.parse_args(argv)
 	
-	# Use the short form of the UE4 version (4.XX) as the channel
-	channel = manager.getEngineVersion('short')
+	# Retrieve the Unreal Engine version string for the specified Conan profile and use it as the channel
+	channel = ProfileManagement.profileEngineVersion(args.profile)
 	
 	# Create an auto-deleting temporary directory to hold our aggregated recipe sources
 	with tempfile.TemporaryDirectory() as tempDir:
@@ -50,7 +51,7 @@ def build(manager, argv):
 					raise RuntimeError('conflicting source directories detected for recipe {}'.format(conflict)) from None
 		
 		# Create our package builder
-		builder = PackageBuilder(tempDir, args.user, channel, 'ue4', args.rebuild, args.dry_run)
+		builder = PackageBuilder(tempDir, args.user, channel, args.profile, args.rebuild, args.dry_run)
 		
 		# Process the specified list of packages, resolving versions as needed
 		packages = []

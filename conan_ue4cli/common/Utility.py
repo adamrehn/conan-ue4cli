@@ -22,6 +22,13 @@ class Utility(object):
 		return (stdout, stderr)
 	
 	@staticmethod
+	def capture(command):
+		'''
+		Executes the supplied command and captures the output
+		'''
+		return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	
+	@staticmethod
 	def readFile(filename):
 		"""
 		Reads data from a file

@@ -32,12 +32,6 @@ class PackageBuilder(object):
 		else:
 			return subprocess.call(command) == 0
 	
-	def capture(self, command):
-		'''
-		Executes the supplied command and captures the output
-		'''
-		return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	
 	def listAvailablePackages(self):
 		'''
 		Retrieves the list of available packages (just the names, not the versions)
@@ -151,7 +145,7 @@ class PackageBuilder(object):
 		# Attempt to perform the search and parse the JSON output
 		try:
 			fullyQualified = self.fullyQualifiedIdentifier(package)
-			searchResult = self.capture(['conan', 'search', fullyQualified, '--json', jsonFile.name])
+			searchResult = Utility.capture(['conan', 'search', fullyQualified, '--json', jsonFile.name])
 			parsedJSON = json.loads(Utility.readFile(jsonFile.name))
 		except:
 			parsedJSON = {}
