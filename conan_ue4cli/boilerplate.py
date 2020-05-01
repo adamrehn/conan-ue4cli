@@ -36,7 +36,10 @@ def boilerplate(manager, argv):
 	templateDir = join(scriptDir, 'boilerplate_templates')
 	
 	# Read the contents of the template .Build.cs file
-	template = ConanTools.load(join(templateDir, 'v{}'.format(templateVersion), 'Template.Build.cs'))
+	buildTemplate = ConanTools.load(join(templateDir, 'v{}'.format(templateVersion), 'Template.Build.cs'))
+	
+	# Read the contents of the template conanfile.py
+	conanfileTemplate = ConanTools.load(join(templateDir, 'common', 'conanfile.py'))
 	
 	# Sanitise the module name to ensure it represents a valid C# identifier
 	validStart = re.compile('[_|\D]')
@@ -44,9 +47,11 @@ def boilerplate(manager, argv):
 	while validStart.match(moduleName, 0, 1) is None:
 		moduleName = moduleName[1:]
 	
-	# Fill out the template contents
-	template = template.replace('${VERSION}', __version__)
-	template = template.replace('${MODULE}', moduleName)
+	# Fill out the template contents for the .Build.cs file and conanfile.py
+	buildTemplate = buildTemplate.replace('${VERSION}', __version__)
+	buildTemplate = buildTemplate.replace('${MODULE}', moduleName)
+	conanfileTemplate = conanfileTemplate.replace('${VERSION}', __version__)
+	conanfileTemplate = conanfileTemplate.replace('${MODULE}', moduleName)
 	
 	# Create a directory for the generated module
 	moduleDir = join(args.outdir, moduleName)
@@ -54,15 +59,15 @@ def boilerplate(manager, argv):
 	
 	# Create the .Build.cs file for the generated module
 	buildFile = join(moduleDir, '{}.Build.cs'.format(moduleName))
-	ConanTools.save(buildFile, template)
+	ConanTools.save(buildFile, buildTemplate)
 	
-	# Create an empty Conanfile for the generated module
-	conanfile = join(moduleDir, 'conanfile.txt')
-	ConanTools.save(conanfile, '[requires]\n\n[generators]\njson\n')
+	# Create the conanfile.py for the generated module
+	conanfile = join(moduleDir, 'conanfile.py')
+	ConanTools.save(conanfile, conanfileTemplate)
 	
 	# Create a .gitignore file to exclude Conan-generated files from version control
 	gitignore = join(moduleDir, '.gitignore')
-	ConanTools.save(gitignore, '# Conan generated files\nconanbuildinfo.*\nconaninfo.*\n')
+	ConanTools.save(gitignore, '# Conan generated files\nconan.lock\nconanbuildinfo.*\nconaninfo.*\ngraph_info.*\n')
 	
 	# Inform the user that generation succeeded
 	print('Generated boilerplate for module "{}" in "{}"'.format(moduleName, moduleDir))
