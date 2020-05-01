@@ -1,10 +1,22 @@
-import glob, importlib.util, os, shutil, subprocess, sys
+import glob, importlib.util, os, shutil, subprocess, sys, time
 from os.path import basename, dirname, exists, isdir, join
 
 class Utility(object):
 	'''
 	Provides utility functionality
 	'''
+	
+	@staticmethod
+	def repeat(func, maxRetries=5, sleepTime=0.5):
+		'''
+		Repeatedly calls a function until it succeeds or the max number of retries has been reached
+		'''
+		for i in range(0, maxRetries):
+			try:
+				func()
+				break
+			except:
+				time.sleep(sleepTime)
 	
 	@staticmethod
 	def run(command, cwd=None, env=None, check=True):
@@ -48,14 +60,15 @@ class Utility(object):
 			return f.read().decode('utf-8')
 	
 	@staticmethod
-	def createEmptyDirectory(dirPath):
+	def truncateDirectory(dirPath):
 		'''
-		Creates a directory, ensuring it is empty
+		Ensures the specified directory exists and is empty
 		'''
 		
 		# Delete the directory if it already exists
+		# (This can sometimes fail arbitrarily under Windows, so retry a few times if it does)
 		if exists(dirPath):
-			shutil.rmtree(dirPath)
+			Utility.repeat(lambda: shutil.rmtree(dirPath))
 		
 		# Create the directory and any missing parent directories
 		os.makedirs(dirPath)

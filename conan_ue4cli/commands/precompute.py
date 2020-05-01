@@ -42,11 +42,11 @@ def precompute(manager, argv):
 		
 		# Create an include directory for our aggregated headers
 		includeDir = join(args.dir, 'precomputed', engineVersion, targetID, 'include')
-		Utility.createEmptyDirectory(includeDir)
+		Utility.truncateDirectory(includeDir)
 		
 		# Create a lib directory for our aggregated libraries
 		libDir = join(args.dir, 'precomputed', engineVersion, targetID, 'lib')
-		Utility.createEmptyDirectory(libDir)
+		Utility.truncateDirectory(libDir)
 		
 		# Keep track of any additional aggregated flags, including system libraries and macro definitions
 		flags = {
