@@ -34,6 +34,17 @@ public class ${MODULE} : ModuleRules
 		return target.IsInPlatformGroup(UnrealPlatformGroup.Windows);
 	}
 	
+	//Returns the version string for the Unreal Engine being used to build this module
+	private string GetEngineVersion()
+	{
+		//Attempt to parse the version JSON file
+		string versionFile = Path.Combine(EngineDirectory, "Build", "Build.version");
+		JsonObject version = JsonObject.Read(new FileReference(versionFile));
+		
+		//Return a version string including the major and minor version numbers, without the patch level
+		return String.Format("{0}.{1}", version.GetIntegerField("MajorVersion"), version.GetIntegerField("MinorVersion"));
+	}
+	
 	//Processes the JSON data produced by Conan that describes our dependencies
 	private void ProcessDependencies(string depsJson, ReadOnlyTargetRules target)
 	{
@@ -63,14 +74,14 @@ public class ${MODULE} : ModuleRules
 		}
 	}
 	
-	//Determines if we have precomputed dependency data for the specified target, and processes it if we do
-	private bool ProcessPrecomputedData(ReadOnlyTargetRules target)
+	//Determines if we have precomputed dependency data for the specified target and Engine version, and processes it if we do
+	private bool ProcessPrecomputedData(ReadOnlyTargetRules target, string engineVersion)
 	{
 		//Resolve the paths to the files and directories that will exist if we have precomputed data for the target
-		string targetID = this.TargetIdentifier(target);
-		string flagsFile = Path.Combine(ModuleDirectory, targetID, "flags.json");
-		string includeDir = Path.Combine(ModuleDirectory, targetID, "include");
-		string libDir = Path.Combine(ModuleDirectory, targetID, "lib");
+		string targetDir = Path.Combine(ModuleDirectory, "precomputed", engineVersion, this.TargetIdentifier(target));
+		string flagsFile = Path.Combine(targetDir, "flags.json");
+		string includeDir = Path.Combine(targetDir, "include");
+		string libDir = Path.Combine(targetDir, "lib");
 		
 		//If any of the required files or directories do not exist then we do not have precomputed data
 		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir)) {
@@ -109,14 +120,16 @@ public class ${MODULE} : ModuleRules
 		Type = ModuleType.External;
 		
 		//Determine if we have precomputed dependency data for the target that is being built
-		if (this.ProcessPrecomputedData(Target) == false)
+		string engineVersion = this.GetEngineVersion();
+		if (this.ProcessPrecomputedData(Target, engineVersion) == false)
 		{
 			//No precomputed data detected, install third-party dependencies using Conan
 			Process.Start(new ProcessStartInfo
 			{
 				FileName = "conan",
-				Arguments = "install . --profile=ue4-" + this.TargetIdentifier(Target),
-				WorkingDirectory = ModuleDirectory
+				Arguments = "install . --profile=ue" + engineVersion + "-" + this.TargetIdentifier(Target),
+				WorkingDirectory = ModuleDirectory,
+				UseShellExecute = false
 			})
 			.WaitForExit();
 			

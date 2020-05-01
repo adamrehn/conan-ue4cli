@@ -205,9 +205,9 @@ def generate(manager, argv):
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
 		
-		# Duplicate the plain "ue4" profile with an appropriate target suffix for the host platform
+		# Duplicate the plain "ue4" profile with an appropriate target suffix for the Engine version and host platform
 		# (This naming scheme will become more useful in future when we support cross-compilation rather than always targeting the host platform)
-		_duplicateProfile(profile, profile + '-' + manager.getPlatformIdentifier())
+		_duplicateProfile(profile, 'ue' + channel + '-' + manager.getPlatformIdentifier())
 		
 		# If we are only creating the Conan profile, stop processing here
 		if args.profile_only == True:
