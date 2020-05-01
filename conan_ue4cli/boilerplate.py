@@ -60,5 +60,9 @@ def boilerplate(manager, argv):
 	conanfile = join(moduleDir, 'conanfile.txt')
 	ConanTools.save(conanfile, '[requires]\n\n[generators]\njson\n')
 	
+	# Create a .gitignore file to exclude Conan-generated files from version control
+	gitignore = join(moduleDir, '.gitignore')
+	ConanTools.save(gitignore, '# Conan generated files\nconanbuildinfo.*\nconaninfo.*\n')
+	
 	# Inform the user that generation succeeded
 	print('Generated boilerplate for module "{}" in "{}"'.format(moduleName, moduleDir))
