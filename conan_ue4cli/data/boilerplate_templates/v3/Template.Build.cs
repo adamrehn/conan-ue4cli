@@ -127,7 +127,7 @@ public class ${MODULE} : ModuleRules
 			Process.Start(new ProcessStartInfo
 			{
 				FileName = "conan",
-				Arguments = "install . --profile=ue" + engineVersion + "-" + this.TargetIdentifier(Target),
+				Arguments = "install . -g=json --profile=ue" + engineVersion + "-" + this.TargetIdentifier(Target),
 				WorkingDirectory = ModuleDirectory,
 				UseShellExecute = false
 			})
