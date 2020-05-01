@@ -1,7 +1,7 @@
 import argparse, conans, copy, glob, os, platform, re, shutil, subprocess, sys, tempfile
 from os.path import abspath, basename, dirname, exists, expanduser, join
 from pkg_resources import parse_version
-from ..common import ConanTools
+from ..common import ConanTools, PackageManagement, ProfileManagement, Utility
 
 class DelegateManager(object):
 	def __init__(self, delegatesDir):
@@ -21,25 +21,11 @@ class DelegateManager(object):
 		
 		return self.defaultDelegate
 
-def _run(command, cwd=None, env=None, check=True):
-	'''
-	Executes a command and raises an exception if it fails
-	'''
-	proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, universal_newlines=True)
-	(stdout, stderr) = proc.communicate(input)
-	if proc.returncode != 0 and check == True:
-		raise Exception(
-			'child process {} failed with exit code {}'.format(command, proc.returncode) +
-			'\nstdout: "{}"\nstderr: "{}"'.format(stdout, stderr)
-		)
-	
-	return (stdout, stderr)
-
 def _getClangVersion(clangPath):
 	'''
 	Retrieves the version number for the specified clang executable
 	'''
-	(stdout, stderr) = _run([clangPath, '--version'])
+	(stdout, stderr) = Utility.run([clangPath, '--version'])
 	matches = re.search('clang version (.+) \\(', stdout)
 	return parse_version(matches.group(1).replace('-', '.'))
 
@@ -70,60 +56,6 @@ def _locateClang(manager, architecture='x86_64'):
 	
 	# If we reached this point then we could not locate the appropriate clang binary
 	raise Exception('could not locate clang. Please ensure you have run Setup.sh to install the bundled toolchain.')
-
-def _install(packageDir, channel, profile, args=[]):
-	'''
-	Installs a package
-	'''
-	return _run(['conan', 'create', '.', 'adamrehn/' + channel, '--profile=' + profile] + args, cwd=packageDir)
-
-def _generateWrapper(libName, template, delegates, packageDir, channel, profile):
-	'''
-	Generates and installs a wrapper package
-	'''
-	conanfile = template.replace('${LIBNAME}', libName)
-	conanfile = conanfile.replace('${DELEGATE_CLASS}', delegates.getDelegateClass(libName))
-	ConanTools.save(join(packageDir, 'conanfile.py'), conanfile)
-	_install(packageDir, channel, profile)
-
-def _conanProfileDir():
-	'''
-	Returns the path to the Conan profiles directory
-	'''
-	return join(conans.paths.get_conan_user_home(), '.conan', 'profiles')
-
-def _conanProfileFile(profile):
-	'''
-	Resolves the path to the file for the specified Conan profile
-	'''
-	return join(_conanProfileDir(), profile)
-
-def _removeProfile(profile):
-	'''
-	Removes the UE4 Conan profile if it exists, along with any profile-wide packages
-	'''
-	print('Removing the "{}" Conan profile if it already exists...'.format(profile))
-	profileFile = _conanProfileFile(profile)
-	if exists(profileFile):
-		os.unlink(profileFile)
-	
-	print('Removing any previous versions of profile base packages...')
-	_run(['conan', 'remove', '--force', '*@adamrehn/profile'])
-
-def _duplicateProfile(source, dest):
-	'''
-	Duplicates an existing Conan profile
-	'''
-	
-	# Remove the destination profile if it already exists
-	sourceProfile = _conanProfileFile(source)
-	destProfile = _conanProfileFile(dest)
-	if os.path.exists(destProfile):
-		os.unlink(destProfile)
-	
-	# Perform the copy
-	print('Copying the "{}" Conan profile into a new profile named "{}"...'.format(source, dest))
-	shutil.copy2(sourceProfile, destProfile)
 
 def generate(manager, argv):
 	
@@ -164,7 +96,10 @@ def generate(manager, argv):
 		profile = 'ue4'
 		
 		# Remove the UE4 Conan profile if it exists, along with any profile-wide packages
-		_removeProfile(profile)
+		print('Removing the "{}" Conan profile if it already exists...'.format(profile))
+		ProfileManagement.removeProfile(profile)
+		print('Removing any previous versions of profile base packages...')
+		PackageManagement.removeBasePackages()
 		
 		# If we are only removing the existing Conan profile, stop processing here
 		if args.remove_only == True:
@@ -180,34 +115,34 @@ def generate(manager, argv):
 		
 		# Create the ue4 Conan profile
 		print('Creating "{}" Conan profile using autodetected settings...'.format(profile))
-		_run(['conan', 'profile', 'new', profile, '--detect'], env=profileEnv)
+		Utility.run(['conan', 'profile', 'new', profile, '--detect'], env=profileEnv)
 		
 		# Use the short form of the UE4 version string (e.g 4.19) as the channel for our installed packages
 		channel = manager.getEngineVersion('short')
 		
 		# Embed the Unreal Engine version string in the ue4 Conan profile so it can be retrieved later if needed
-		_run(['conan', 'profile', 'update', 'env.UNREAL_ENGINE_VERSION={}'.format(channel), profile])
+		Utility.run(['conan', 'profile', 'update', 'env.UNREAL_ENGINE_VERSION={}'.format(channel), profile])
 		
 		print('Installing profile base packages...')
-		_install(join(packagesDir, 'ue4lib'), 'profile', profile)
-		_install(join(packagesDir, 'libcxx'), 'profile', profile)
-		_install(join(packagesDir, 'ue4util'), 'profile', profile)
+		PackageManagement.install(join(packagesDir, 'ue4lib'), 'profile', profile)
+		PackageManagement.install(join(packagesDir, 'libcxx'), 'profile', profile)
+		PackageManagement.install(join(packagesDir, 'ue4util'), 'profile', profile)
 		
 		# Apply our Linux-specific profile modifications
 		if platform.system() == 'Linux':
 			
 			# Update the ue4 Conan profile to ensure libc++ is specified as the C++ standard library
-			_run(['conan', 'profile', 'update', 'settings.compiler.libcxx=libc++', profile])
+			Utility.run(['conan', 'profile', 'update', 'settings.compiler.libcxx=libc++', profile])
 			
 			# Update the ue4 Conan profile to add the toolchain wrapper package as a build requirement for all packages
-			profilePath = _conanProfileFile(profile)
+			profilePath = ProfileManagement.conanProfileFile(profile)
 			profileConfig = ConanTools.load(profilePath)
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
 		
 		# Duplicate the plain "ue4" profile with an appropriate target suffix for the Engine version and host platform
 		# (This naming scheme will become more useful in future when we support cross-compilation rather than always targeting the host platform)
-		_duplicateProfile(profile, 'ue' + channel + '-' + manager.getPlatformIdentifier())
+		ProfileManagement.duplicateProfile(profile, 'ue' + channel + '-' + manager.getPlatformIdentifier())
 		
 		# If we are only creating the Conan profile, stop processing here
 		if args.profile_only == True:
@@ -234,7 +169,7 @@ def generate(manager, argv):
 		libs = [lib for lib in manager.listThirdPartyLibs() if lib != 'libc++']
 		
 		print('Removing any previous versions of generated wrapper packages for {}...'.format(channel))
-		_run(['conan', 'remove', '--force', '*/ue4@adamrehn/{}'.format(channel)], check=False)
+		Utility.run(['conan', 'remove', '--force', '*/ue4@adamrehn/{}'.format(channel)], check=False)
 		
 		# Under Linux, generate the wrapper package for the bundled clang toolchain and bundled libc++
 		if platform.system() == 'Linux':
@@ -247,7 +182,7 @@ def generate(manager, argv):
 			print('Generating and installing toolchain wrapper package...')
 			print('  Wrapping clang: {}'.format(clang))
 			print('  Wrapping lib++: {}'.format(libcxx))
-			_install(join(packagesDir, 'toolchain-wrapper'), channel, profile, [
+			PackageManagement.install(join(packagesDir, 'toolchain-wrapper'), channel, profile, [
 				'--env', 'WRAPPED_TOOLCHAIN={}'.format(dirname(dirname(clang))),
 				'--env', 'WRAPPED_LIBCXX={}'.format(dirname(dirname(dirname(dirname(libcxx)))))
 			])
@@ -255,5 +190,5 @@ def generate(manager, argv):
 		# Generate the package for each UE4-bundled thirdparty library
 		for lib in libs:
 			print('Generating and installing wrapper package for {}...'.format(lib))
-			_generateWrapper(lib, template, delegates, tempDir, channel, profile)
+			PackageManagement.generateWrapper(lib, template, delegates, tempDir, channel, profile)
 		print('Done.')

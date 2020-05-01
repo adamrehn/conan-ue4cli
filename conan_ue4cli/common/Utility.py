@@ -1,10 +1,25 @@
-import glob, importlib.util, os, sys
+import glob, importlib.util, os, subprocess, sys
 from os.path import basename, dirname, join
 
 class Utility(object):
 	'''
 	Provides utility functionality
 	'''
+	
+	@staticmethod
+	def run(command, cwd=None, env=None, check=True):
+		'''
+		Executes a command and returns its output, raising an exception if it fails (unless `check` is set to False)
+		'''
+		proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, universal_newlines=True)
+		(stdout, stderr) = proc.communicate(input)
+		if proc.returncode != 0 and check == True:
+			raise Exception(
+				'child process {} failed with exit code {}'.format(command, proc.returncode) +
+				'\nstdout: "{}"\nstderr: "{}"'.format(stdout, stderr)
+			)
+		
+		return (stdout, stderr)
 	
 	@staticmethod
 	def readFile(filename):
