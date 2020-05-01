@@ -105,7 +105,7 @@ public class ${MODULE} : ModuleRules
 		PublicDefinitions.AddRange(flags.GetStringArrayField("defines"));
 		
 		//Link against any system libraries specified by the JSON file, ensuring we add the file extension under Windows
-		string[] systemLibs = flags.GetStringArrayField("libs");
+		string[] systemLibs = flags.GetStringArrayField("system_libs");
 		foreach (string lib in systemLibs)
 		{
 			string libFull = lib + ((this.IsWindows(target)) ? libExtension : "");

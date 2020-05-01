@@ -1,10 +1,14 @@
-from .commands import boilerplate, build, generate, update
+from .commands import boilerplate, build, generate, precompute, update
 import os, platform, sys
 
 def main(manager, args):
 	
 	# Our supported subcommands
 	SUBCOMMANDS = {
+		'bake': {
+			'function': precompute,
+			'description': 'Short alias for the precompute command'
+		},
 		'boilerplate': {
 			'function': boilerplate,
 			'description': 'Generates UE4 modules with boilerplate code for wrapping external dependencies'
@@ -16,6 +20,10 @@ def main(manager, args):
 		'generate': {
 			'function': generate,
 			'description': 'Generates the UE4 Conan profile and associated packages'
+		},
+		'precompute': {
+			'function': precompute,
+			'description': 'Generates precomputed dependency data for UE4 boilerplate modules'
 		},
 		'update': {
 			'function': update,

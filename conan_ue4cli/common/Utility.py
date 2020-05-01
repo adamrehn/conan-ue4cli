@@ -1,5 +1,5 @@
-import glob, importlib.util, os, subprocess, sys
-from os.path import basename, dirname, join
+import glob, importlib.util, os, shutil, subprocess, sys
+from os.path import basename, dirname, exists, isdir, join
 
 class Utility(object):
 	'''
@@ -29,12 +29,36 @@ class Utility(object):
 		return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	
 	@staticmethod
+	def copyFileOrDir(source, destDir):
+		'''
+		Copies the source file or directory to the destination directory
+		'''
+		dest = join(destDir, basename(source))
+		if isdir(source):
+			shutil.copytree(source, dest)
+		else:
+			shutil.copy2(source, dest)
+	
+	@staticmethod
 	def readFile(filename):
 		"""
 		Reads data from a file
 		"""
 		with open(filename, 'rb') as f:
 			return f.read().decode('utf-8')
+	
+	@staticmethod
+	def createEmptyDirectory(dirPath):
+		'''
+		Creates a directory, ensuring it is empty
+		'''
+		
+		# Delete the directory if it already exists
+		if exists(dirPath):
+			shutil.rmtree(dirPath)
+		
+		# Create the directory and any missing parent directories
+		os.makedirs(dirPath)
 	
 	@staticmethod
 	def listPackagesInDir(directory):
