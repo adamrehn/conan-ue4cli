@@ -74,8 +74,9 @@ def generate(manager, argv):
 	# Create an auto-deleting temporary directory to hold the generated conanfiles
 	with tempfile.TemporaryDirectory() as tempDir:
 		
-		# Use the Conan profile name "ue4" to maintain clean separation from the default Conan profile
-		profile = ProfileManagement.defaultProfile()
+		# Generate a profile with an appropriate target suffix for the current Engine version and host platform
+		# (This naming scheme will become more useful in future when we support cross-compilation rather than always targeting the host platform)
+		profile = ProfileManagement.profileForHostPlatform(manager)
 		
 		# Remove the UE4 Conan profile if it exists, along with any profile-wide packages
 		print('Removing the "{}" Conan profile if it already exists...'.format(profile))
@@ -122,9 +123,8 @@ def generate(manager, argv):
 			profileConfig = profileConfig.replace('[build_requires]', '[build_requires]\n*: toolchain-wrapper/ue4@adamrehn/{}'.format(channel))
 			ConanTools.save(profilePath, profileConfig)
 		
-		# Duplicate the plain "ue4" profile with an appropriate target suffix for the Engine version and host platform
-		# (This naming scheme will become more useful in future when we support cross-compilation rather than always targeting the host platform)
-		ProfileManagement.duplicateProfile(profile, 'ue' + channel + '-' + manager.getPlatformIdentifier())
+		# Duplicate the profile for the host system with the generic name "ue4" to maintain backwards compatibility with legacy versions of conan-ue4cli
+		ProfileManagement.duplicateProfile(profile, ProfileManagement.genericProfile())
 		
 		# If we are only creating the Conan profile, stop processing here
 		if args.profile_only == True:

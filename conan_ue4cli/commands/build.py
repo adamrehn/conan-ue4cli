@@ -20,11 +20,23 @@ def build(manager, argv):
 	parser.add_argument('-o', '-option', action='append', dest='options', metavar='PKG:OPTION=VALUE', help='Specify options to pass to package recipes when building them (does not affect dependency resolution)')
 	parser.add_argument('-user', default=DEFAULT_USER, help='Set the user for the built packages (default user is "{}")'.format(DEFAULT_USER))
 	parser.add_argument('-upload', default=None, metavar='REMOTE', help='Upload the built packages to the specified Conan remote')
-	parser.add_argument('-p', '-profile', dest='profile', metavar='PROFILE', default=ProfileManagement.defaultProfile(), choices=ProfileManagement.listGeneratedProfiles(), help='Build packages using the specified Conan profile (defaults to the profile for the host platform and most Unreal Engine installation used to perform profile generation)')
+	parser.add_argument('-p', '-profile', dest='profile', metavar='PROFILE', default=None, choices=ProfileManagement.listGeneratedProfiles(), help='Build packages using the specified Conan profile (defaults to the profile for the host platform and most Unreal Engine installation used to perform profile generation)')
 	parser.add_argument('package', nargs='+', help='Package(s) to build, in either NAME or NAME==VERSION format (specify "all" to build all available packages)')
 	
 	# Parse the supplied command-line arguments
 	args = parser.parse_args(argv)
+	
+	# If a profile was not specified, fallback to the default for the host platform (or using the generic one if the default doesn't exist)
+	if args.profile is None:
+		preferredDefault = ProfileManagement.profileForHostPlatform(manager)
+		genericFallback = ProfileManagement.genericProfile()
+		if preferredDefault in ProfileManagement.listGeneratedProfiles():
+			print('Using default profile for host platform "{}"'.format(preferredDefault))
+			args.profile = preferredDefault
+		else:
+			print('Warning: falling back to generic profile "{}" because the profile "{}" does not exist.'.format(genericFallback, preferredDefault))
+			print('You should run `ue4 conan generate` to generate the host platform profile for the current Engine installation.')
+			args.profile = genericFallback
 	
 	# Retrieve the Unreal Engine version string for the specified Conan profile and use it as the channel
 	channel = ProfileManagement.profileEngineVersion(args.profile)
