@@ -3,7 +3,7 @@ import inspect
 
 
 # A dummy config type to pass to Conan
-class DummyConfig(object):
+class _DummyConfig(object):
 	def __getattribute__(self, attr):
 		return None
 
@@ -54,6 +54,6 @@ class ConanTools(object):
 		if hasattr(tools, 'get_global_instances') and hasattr(tools, 'set_global_instances'):
 			if 'config' in inspect.signature(tools.set_global_instances).parameters:
 				instances = tools.get_global_instances()
-				tools.set_global_instances(the_output=instances[0], the_requester=instances[1], config=DummyConfig())
+				tools.set_global_instances(the_output=instances[0], the_requester=instances[1], config=_DummyConfig())
 		
 		ConanTools._isConanConfigured = True
