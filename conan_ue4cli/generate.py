@@ -75,7 +75,7 @@ def _install(packageDir, channel, profile, args=[]):
 	'''
 	Installs a package
 	'''
-	return _run(['conan', 'create', '.', 'adamrehn/' + channel, '--profile', profile] + args, cwd=packageDir)
+	return _run(['conan', 'create', '.', 'adamrehn/' + channel, '--profile=' + profile] + args, cwd=packageDir)
 
 def _generateWrapper(libName, template, delegates, packageDir, channel, profile):
 	'''

@@ -224,7 +224,7 @@ class PackageBuilder(object):
 		'''
 		packageDir = dirname(self.getConanfile(package))
 		optionsArgs = list(itertools.chain.from_iterable([['-o', option] for option in options]))
-		if self.execute(['conan', 'create'] + optionsArgs + [packageDir, '{}/{}'.format(self.user, self.channel), '--profile', self.profile]) == False:
+		if self.execute(['conan', 'create'] + optionsArgs + [packageDir, '{}/{}'.format(self.user, self.channel), '--profile=' + self.profile]) == False:
 			raise RuntimeError('failed to build package "{}"'.format(package))
 	
 	def uploadPackage(self, package, remote):

@@ -115,7 +115,7 @@ public class ${MODULE} : ModuleRules
 			Process.Start(new ProcessStartInfo
 			{
 				FileName = "conan",
-				Arguments = "install . --profile ue4-" + this.TargetIdentifier(Target),
+				Arguments = "install . --profile=ue4-" + this.TargetIdentifier(Target),
 				WorkingDirectory = ModuleDirectory
 			})
 			.WaitForExit();
