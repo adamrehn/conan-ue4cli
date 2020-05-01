@@ -1,7 +1,4 @@
-from .boilerplate import boilerplate
-from .build import build
-from .generate import generate
-from .update import update
+from .commands import boilerplate, build, generate, update
 import os, platform, sys
 
 def main(manager, args):

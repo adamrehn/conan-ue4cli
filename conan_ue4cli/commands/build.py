@@ -1,7 +1,7 @@
 import argparse, glob, importlib.util, io, inspect, itertools, json, os, ue4cli, subprocess, shutil, shlex, sys, tempfile
 from os.path import abspath, basename, dirname, exists, join
 from conans.client.output import ConanOutput
-from .RecipeCache import RecipeCache
+from ..common import RecipeCache
 from collections import deque
 from natsort import natsorted
 from .update import update

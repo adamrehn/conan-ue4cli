@@ -1,7 +1,7 @@
 import argparse, conans, copy, glob, os, platform, re, shutil, subprocess, sys, tempfile
 from os.path import abspath, basename, dirname, exists, expanduser, join
 from pkg_resources import parse_version
-from .ConanTools import ConanTools
+from ..common import ConanTools
 
 class DelegateManager(object):
 	def __init__(self, delegatesDir):
@@ -146,10 +146,10 @@ def generate(manager, argv):
 		return
 	
 	# Determine the full path to the directories containing our files
-	scriptDir = dirname(abspath(__file__))
-	packagesDir = join(scriptDir, 'packages')
-	templateDir = join(scriptDir, 'template')
-	delegatesDir = join(scriptDir, 'delegates')
+	dataDir = join(dirname(dirname(abspath(__file__))), 'data')
+	packagesDir = join(dataDir, 'packages')
+	templateDir = join(dataDir, 'template')
+	delegatesDir = join(dataDir, 'delegates')
 	
 	# Read the contents of the template conanfile for generated packages
 	template = ConanTools.load(join(templateDir, 'conanfile.py'))

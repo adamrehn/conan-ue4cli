@@ -22,7 +22,7 @@ setup(
 	author='Adam Rehn',
 	author_email='adam@adamrehn.com',
 	license='MIT',
-	packages=['conan_ue4cli'],
+	packages=['conan_ue4cli', 'conan_ue4cli.commands', 'conan_ue4cli.common'],
 	zip_safe=False,
 	python_requires = '>=3.5',
 	install_requires = [
@@ -35,10 +35,10 @@ setup(
 	],
 	package_data = {
 		'conan_ue4cli': [
-			'*/*.py',
-			'*/*/*.py',
-			'*/*/*/*.py',
-			'*/*/*.cs'
+			'data/*/*.py',
+			'data/*/*/*.py',
+			'data/*/*/*/*.py',
+			'data/*/*/*.cs'
 		]
 	},
 	entry_points = {

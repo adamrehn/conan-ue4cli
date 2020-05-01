@@ -1,6 +1,6 @@
+from ..common import ConanTools
+from ..version import __version__
 import argparse, os, re, sys
-from .ConanTools import ConanTools
-from .version import __version__
 from os.path import abspath, dirname, join
 
 def boilerplate(manager, argv):
@@ -32,8 +32,8 @@ def boilerplate(manager, argv):
 		templateVersion = 3
 	
 	# Determine the full path to the directory containing our templates
-	scriptDir = dirname(abspath(__file__))
-	templateDir = join(scriptDir, 'boilerplate_templates')
+	dataDir = join(dirname(dirname(abspath(__file__))), 'data')
+	templateDir = join(dataDir, 'boilerplate_templates')
 	
 	# Read the contents of the template .Build.cs file
 	buildTemplate = ConanTools.load(join(templateDir, 'v{}'.format(templateVersion), 'Template.Build.cs'))

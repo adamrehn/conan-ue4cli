@@ -1,4 +1,4 @@
-from .RecipeCache import RecipeCache
+from ..common import RecipeCache
 
 def update(manager, argv):
 	
