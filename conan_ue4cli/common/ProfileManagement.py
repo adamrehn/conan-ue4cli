@@ -100,7 +100,15 @@ class ProfileManagement(object):
 		'''
 		Returns the Conan profile name for the host system platform and the current Unreal Engine installation
 		'''
-		return 'ue' + manager.getEngineVersion('short') + '-' + manager.getPlatformIdentifier()
+		
+		# Some platforms have an architecture suffix for their default architecture, whilst others do not
+		defaultArch = {
+			'Linux': 'x86_64-unknown-linux-gnu'
+		}
+		
+		targetPlatform = manager.getPlatformIdentifier()
+		archSuffix = '-{}'.format(defaultArch[targetPlatform]) if targetPlatform in defaultArch else ''
+		return 'ue' + manager.getEngineVersion('short') + '-' + targetPlatform + archSuffix
 	
 	
 	# "Private" methods
