@@ -1,5 +1,5 @@
 import os
-from os.path import join
+from os.path import exists, join
 from .ConanTools import ConanTools
 
 class DelegateManager(object):
