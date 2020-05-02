@@ -62,7 +62,7 @@ def generate(manager, argv):
 	# Determine the full path to the directories containing our files
 	dataDir = join(dirname(dirname(abspath(__file__))), 'data')
 	packagesDir = join(dataDir, 'packages')
-	templateDir = join(dataDir, 'template')
+	templateDir = join(dataDir, 'wrapper_template')
 	delegatesDir = join(dataDir, 'delegates')
 	
 	# Read the contents of the template conanfile for generated packages
