@@ -10,10 +10,15 @@ def precompute(manager, argv):
 		description = 'Generates precomputed dependency data for UE4 boilerplate modules'
 	)
 	parser.add_argument('-d', '-dir', dest='dir', metavar='DIR', default=os.getcwd(), help='Specifies the directory containing the boilerplate module for which precomputed data should be created (defaults to the current working directory)')
-	parser.add_argument('profile', metavar='profile', choices=ProfileManagement.listGeneratedProfiles(False), help='The Conan profile to precompute dependency data for')
+	parser.add_argument('profile', metavar='profile', choices=ProfileManagement.listGeneratedProfiles(False) + ['host'], help='The Conan profile to precompute dependency data for')
 	
 	# Parse the supplied command-line arguments
 	args = parser.parse_args(argv)
+	
+	# If the user specified "host" as the profile then use the default profile for the host platform
+	if args.profile == 'host':
+		args.profile = ProfileManagement.profileForHostPlatform(manager)
+		print('Using profile for host platform "{}"'.format(args.profile))
 	
 	# Verify that the specified directory contains a conanfile
 	args.dir = abspath(args.dir)
