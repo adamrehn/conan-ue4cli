@@ -3,6 +3,10 @@ from conans import ConanFile, tools
 class LibCxxConan(ConanFile):
     name = "libcxx"
     version = "ue4"
+    homepage = "https://github.com/adamrehn/conan-ue4cli"
+    author = "Adam Rehn (adam@adamrehn.com)"
+    license = "MIT"
+
     exports = "*.py"
     build_policy = "missing"
     

@@ -3,6 +3,10 @@ from conans import ConanFile
 class UE4UtilConan(ConanFile):
     name = "ue4util"
     version = "ue4"
+    homepage = "https://github.com/adamrehn/conan-ue4cli"
+    author = "Adam Rehn (adam@adamrehn.com)"
+    license = "MIT"
+
     exports = "*.py"
     build_policy = "missing"
     
