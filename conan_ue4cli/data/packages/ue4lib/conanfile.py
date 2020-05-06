@@ -12,6 +12,7 @@ class UE4LibConan(ConanFile):
     homepage = "https://github.com/adamrehn/conan-ue4cli"
     author = "Adam Rehn (adam@adamrehn.com)"
     license = "MIT"
+    url = "https://github.com/adamrehn/conan-ue4cli/tree/master/conan_ue4cli/data/packages/ue4lib"
 
     exports = "*.py"
     build_policy = "missing"
