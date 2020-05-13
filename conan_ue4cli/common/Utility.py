@@ -1,4 +1,4 @@
-import glob, importlib.util, os, shutil, subprocess, sys, time
+import glob, importlib.util, json, os, shutil, subprocess, sys, tempfile, time
 from os.path import basename, dirname, exists, isdir, join
 
 class Utility(object):
@@ -19,11 +19,11 @@ class Utility(object):
 				time.sleep(sleepTime)
 	
 	@staticmethod
-	def run(command, cwd=None, env=None, check=True):
+	def run(command, check=True, **kwargs):
 		'''
 		Executes a command and returns its output, raising an exception if it fails (unless `check` is set to False)
 		'''
-		proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=env, universal_newlines=True)
+		proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, **kwargs)
 		(stdout, stderr) = proc.communicate(input)
 		if proc.returncode != 0 and check == True:
 			raise Exception(
@@ -34,11 +34,11 @@ class Utility(object):
 		return (stdout, stderr)
 	
 	@staticmethod
-	def capture(command):
+	def capture(command, **kwargs):
 		'''
 		Executes the supplied command and captures the output
 		'''
-		return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		return subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
 	
 	@staticmethod
 	def copyFileOrDir(source, destDir):
@@ -109,3 +109,16 @@ class Utility(object):
 		sys.path.remove(moduleDir)
 		
 		return module
+	
+	@staticmethod
+	def getJSON(command, jsonFlags=['--json={}'], **kwargs):
+		'''
+		Executes the specified command, instructing it to produce JSON output and then parsing the result.
+		This is primarily useful when working with tools that will not send JSON output to stdout.
+		'''
+		
+		# Create an auto-deleting temporary directory to hold the JSON output file
+		with tempfile.TemporaryDirectory() as tempDir:
+			jsonFile = join(tempDir, 'out.json')
+			Utility.run(command + [f.format(jsonFile) for f in jsonFlags], **kwargs)
+			return json.loads(Utility.readFile(jsonFile))

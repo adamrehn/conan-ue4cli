@@ -27,8 +27,6 @@ setup(
 	python_requires = '>=3.5',
 	install_requires = [
 		'conan>=1.7.4',
-		'natsort>=4.0.0',
-		'networkx',
 		'setuptools',
 		'ue4cli>=0.0.24',
 		'wheel'
