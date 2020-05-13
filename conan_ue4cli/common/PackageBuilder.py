@@ -49,4 +49,4 @@ class PackageBuilder:
 		Attempts to upload the specified Conan package to the specified remote
 		'''
 		package = '{}/{}@{}/{}'.format(name, version, self._user, self._channel)
-		self._executor(['conan', 'upload', package, '--all', '--confirm', '-r', remote], check=True)
+		self._executor.execute(['conan', 'upload', package, '--all', '--confirm', '-r', remote], check=True)
