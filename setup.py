@@ -8,7 +8,7 @@ with open(abspath(join(dirname(__file__), 'conan_ue4cli', 'version.py'))) as ver
 setup(
 	name='conan-ue4cli',
 	version=__version__,
-	description='ue4cli plugin providing Conan wrapper package functionality',
+	description='Integrate third-party libraries into the Unreal Engine with Conan',
 	classifiers=[
 		'License :: OSI Approved :: MIT License',
 		'Programming Language :: Python :: 3.5',
