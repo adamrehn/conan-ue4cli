@@ -1,41 +1,27 @@
-Conan ue4cli wrapper packages
-=============================
+Integrate third-party libraries into the Unreal Engine with Conan
+=================================================================
 
-The conan-ue4cli Python package is a plugin for [ue4cli](https://github.com/adamrehn/ue4cli) that provides functionality for generating and using Conan packages that wrap the third-party libraries bundled in the `Engine/Source/ThirdParty` subdirectory of the Unreal Engine 4 source tree. 
+The conan-ue4cli Python package is a plugin for [ue4cli](https://github.com/adamrehn/ue4cli) that provides functionality for integrating third-party libraries into Unreal Engine projects and plugins using the [Conan C++ package management system](https://conan.io/). conan-ue4cli extends Conan for use with the Unreal Engine by providing functionality to facilitate the following workflow:
 
-**For an example of how to use the generated packages in a UE4 project, see the [ue4-opencv-demo](https://github.com/adamrehn/ue4-opencv-demo) repository.**
+1. Conan packages are generated to wrap all Unreal-bundled third-party libraries, as well as the compiler toolchain itself when targeting Linux platforms.
 
-**You can find the full details of the conan-ue4cli workflow in this article: <http://adamrehn.com/articles/cross-platform-library-integration-in-unreal-engine-4/>.**
+2. Conan profiles are generated to ensure user packages are built with the correct configuration and against the wrapper packages for the Unreal-bundled versions of any dependency libraries.
 
+3. Packages are built using the generated profiles.
 
-Installation
--------------
+4. Boilerplate code is generated for External Modules that consume the built Conan packages.
 
-To install conan-ue4cli, simply run:
+5. Optionally, precomputed dependency data is generated for one or more target platforms so Unreal projects or plugins that consume third-party libraries can be shared with other developers who do not have conan-ue4cli installed.
 
-```
-pip3 install conan-ue4cli
-```
+**Check out the [comprehensive documentation](https://adamrehn.com/docs/conan-ue4cli/) to read about the issues that conan-ue4cli addresses and for detailed instructions on installation and usage.**
 
+Resources:
 
-Wrapper generation
-------------------
+- **Documentation:** <https://adamrehn.com/docs/conan-ue4cli/>
+- **GitHub repository:** <https://github.com/adamrehn/conan-ue4cli>
+- **Package on PyPI:** <https://pypi.org/project/conan-ue4cli/>
+- **Related articles:** <https://adamrehn.com/articles/tag/Unreal%20Engine/>
 
-You can perform package generation by running:
+## Legal
 
-```
-ue4 conan generate
-```
-
-A Conan profile named `ue4` will be created to maintain clean separation from the default Conan profile, and wrapper packages for all of the third-party libraries bundled with the detected UE4 installation will be generated and installed into the local Conan cache.
-
-Note that you will need to use a source build of UE4 to generate wrapper packages rather than an Installed Build (such as those obtained via the Epic Games Launcher), since Installed Builds do not contain all of the files necessary for wrapper generation. Fortunately, you don't actually need to have built UE4 from source for this to work, you can simply clone the source code and run `Setup.bat`/`Setup.sh` and `GenerateProjectFiles.bat`/`GenerateProjectFiles.sh` to download the required third-party dependencies and conan-ue4cli can generate the wrappers from the source tree.
-
-
-Building packages that use the wrappers
----------------------------------------
-
-You can build packages that depend on the wrappers using the `ue4 conan build` command. By default, the current working directory will be searched for available packages to build. See the [**ue4-conan-recipes**
-](https://github.com/adamrehn/ue4-conan-recipes) repository for an example of the required directory structure for packages that are built using this method.
-
-You can also build Conan packages that depend on the wrappers using the stanard Conan commands. Be sure to specify `--profile ue4` to ensure the correct compiler settings are used (e.g using clang instead of GCC under Linux.)
+Copyright &copy; 2018-2020, Adam Rehn. Licensed under the MIT License, see the file [LICENSE](https://github.com/adamrehn/conan-ue4cli/blob/master/LICENSE) for details.
