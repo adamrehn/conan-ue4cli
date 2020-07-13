@@ -13,11 +13,11 @@ The conan-ue4cli Python package is a plugin for [ue4cli](https://github.com/adam
 
 5. Optionally, precomputed dependency data is generated for one or more target platforms so Unreal projects or plugins that consume third-party libraries can be shared with other developers who do not have conan-ue4cli installed.
 
-**Check out the [comprehensive documentation](https://adamrehn.com/docs/conan-ue4cli/) to read about the integration issues that conan-ue4cli addresses and for detailed instructions on installation and usage.**
+**Check out the [comprehensive documentation](https://docs.adamrehn.com/conan-ue4cli/) to read about the integration issues that conan-ue4cli addresses and for detailed instructions on installation and usage.**
 
 Resources:
 
-- **Documentation:** <https://adamrehn.com/docs/conan-ue4cli/>
+- **Documentation:** <https://docs.adamrehn.com/conan-ue4cli/>
 - **GitHub repository:** <https://github.com/adamrehn/conan-ue4cli>
 - **Package on PyPI:** <https://pypi.org/project/conan-ue4cli/>
 - **Related articles:** <https://adamrehn.com/articles/tag/Unreal%20Engine/>
