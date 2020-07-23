@@ -31,6 +31,12 @@ class UE4Lib():
         """
         return self.details.resolveRoot(self.details.libs, self.engineRoot)
     
+    def systemlibs(self):
+        """
+        Returns the list of system library files for this library
+        """
+        return self.details.systemLibs
+    
     def defines(self):
         """
         Returns the preprocessor definitions for this library

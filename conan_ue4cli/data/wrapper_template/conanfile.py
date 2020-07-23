@@ -45,7 +45,7 @@ class ${LIBNAME}Conan(ConanFile):
         
         # Copy any static library files into our package, ignoring shared libraries
         # and gathering a list of any system libraries that need to be linked against
-        systemLibs = []
+        systemLibs = details.systemlibs()
         for lib in details.libs():
             
             # Determine if this is a system library
@@ -83,7 +83,7 @@ class ${LIBNAME}Conan(ConanFile):
         
         # Export our static libraries and system libraries
         self.cpp_info.libs = tools.collect_libs(self)
-        self.cpp_info.libs.extend(flags['systemlibs'])
+        self.cpp_info.system_libs = flags['systemlibs']
         
         # Perform any package-specific post-info logic
         PackageDelegate.post_info(self)
