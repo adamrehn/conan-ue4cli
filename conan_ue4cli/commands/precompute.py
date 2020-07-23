@@ -53,6 +53,10 @@ def precompute(manager, argv):
 		libDir = join(args.dir, 'precomputed', engineVersion, targetID, 'lib')
 		Utility.truncateDirectory(libDir)
 		
+		# Create a data directory for our aggregated data/resource files
+		dataDir = join(args.dir, 'precomputed', engineVersion, targetID, 'data')
+		Utility.truncateDirectory(dataDir)
+		
 		# Keep track of any additional aggregated flags, including system libraries and macro definitions
 		flags = {
 			'defines': [],
@@ -90,6 +94,12 @@ def precompute(manager, argv):
 					Utility.copyFileOrDir(resolved, libDir)
 				else:
 					print('Warning: failed to resolve static library file for library name "{}"'.format(lib))
+			
+			# Aggregate the files from each of the dependency's resource directories
+			for depResourceDir in dependency['res_paths']:
+				for file in glob.glob(join(depResourceDir, '*')):
+					print('Copying "{}"...'.format(file))
+					Utility.copyFileOrDir(file, dataDir)
 			
 			# Add any macro definitions to our list
 			flags['defines'] += dependency['defines']

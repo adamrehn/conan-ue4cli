@@ -42,7 +42,7 @@ public class ${MODULE} : ModuleRules
 	}
 	
 	//Processes the JSON data produced by Conan that describes our dependencies
-	private void ProcessDependencies(string depsJson, ReadOnlyTargetRules target)
+	private void ProcessDependencies(string depsJson, ReadOnlyTargetRules target, string stagingDir)
 	{
 		//We need to ensure libraries end with ".lib" under Windows
 		string libSuffix = ((this.IsWindows(target)) ? ".lib" : "");
@@ -67,20 +67,31 @@ public class ${MODULE} : ModuleRules
 				string libFull = lib + ((libSuffix.Length == 0 || lib.EndsWith(libSuffix)) ? "" : libSuffix);
 				PublicAdditionalLibraries.Add(libFull);
 			}
+			
+			//Copy any data files needed by the package into our staging directory
+			string[] dataDirs = dep.GetStringArrayField("res_paths");
+			foreach (string dir in dataDirs)
+			{
+				string[] files = Directory.GetFiles(dir, "*", SearchOption.AllDirectories);
+				foreach(string file in files) {
+					RuntimeDependencies.Add(Path.Combine(stagingDir, Path.GetFileName(file)), file, StagedFileType.NonUFS);
+				}
+			}
 		}
 	}
 	
 	//Determines if we have precomputed dependency data for the specified target and Engine version, and processes it if we do
-	private bool ProcessPrecomputedData(ReadOnlyTargetRules target, string engineVersion)
+	private bool ProcessPrecomputedData(ReadOnlyTargetRules target, string engineVersion, string stagingDir)
 	{
 		//Resolve the paths to the files and directories that will exist if we have precomputed data for the target
 		string targetDir = Path.Combine(ModuleDirectory, "precomputed", engineVersion, this.TargetIdentifier(target));
 		string flagsFile = Path.Combine(targetDir, "flags.json");
 		string includeDir = Path.Combine(targetDir, "include");
 		string libDir = Path.Combine(targetDir, "lib");
+		string dataDir = Path.Combine(targetDir, "data");
 		
 		//If any of the required files or directories do not exist then we do not have precomputed data
-		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir)) {
+		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir) || !Directory.Exists(dataDir)) {
 			return false;
 		}
 		
@@ -108,6 +119,12 @@ public class ${MODULE} : ModuleRules
 			PublicAdditionalLibraries.Add(libFull);
 		}
 		
+		//Copy any data files needed by the package into our staging directory
+		string[] files = Directory.GetFiles(dataDir, "*", SearchOption.AllDirectories);
+		foreach(string file in files) {
+			RuntimeDependencies.Add(Path.Combine(stagingDir, Path.GetFileName(file)), file, StagedFileType.NonUFS);
+		}
+		
 		return true;
 	}
 	
@@ -115,9 +132,15 @@ public class ${MODULE} : ModuleRules
 	{
 		Type = ModuleType.External;
 		
+		//Ensure our staging directory exists prior to copying any dependency data files into it
+		string stagingDir = Path.Combine("$(ProjectDir)", "Binaries", "Data", "${MODULE}");
+		if (!Directory.Exists(stagingDir)) {
+			Directory.CreateDirectory(stagingDir);
+		}
+		
 		//Determine if we have precomputed dependency data for the target that is being built
 		string engineVersion = this.GetEngineVersion();
-		if (this.ProcessPrecomputedData(Target, engineVersion) == false)
+		if (this.ProcessPrecomputedData(Target, engineVersion, stagingDir) == false)
 		{
 			//No precomputed data detected, install third-party dependencies using Conan
 			Process.Start(new ProcessStartInfo
@@ -130,7 +153,7 @@ public class ${MODULE} : ModuleRules
 			.WaitForExit();
 			
 			//Link against our Conan-installed dependencies
-			this.ProcessDependencies(Path.Combine(ModuleDirectory, "conanbuildinfo.json"), Target);
+			this.ProcessDependencies(Path.Combine(ModuleDirectory, "conanbuildinfo.json"), Target, stagingDir);
 		}
 	}
 }
