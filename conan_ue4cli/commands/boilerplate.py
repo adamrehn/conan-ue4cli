@@ -65,9 +65,18 @@ def boilerplate(manager, argv):
 	conanfile = join(moduleDir, 'conanfile.py')
 	ConanTools.save(conanfile, conanfileTemplate)
 	
-	# Create a .gitignore file to exclude Conan-generated files from version control
+	# Create a .gitignore file to exclude Conan-generated files from version control, but not precomputed dependency data
 	gitignore = join(moduleDir, '.gitignore')
-	ConanTools.save(gitignore, '# Conan generated files\nconan.lock\nconanbuildinfo.*\nconaninfo.*\ngraph_info.*\n')
+	ConanTools.save(gitignore, '\n'.join([
+		'# Conan generated files',
+		'conan.lock',
+		'conanbuildinfo.*',
+		'conaninfo.*',
+		'graph_info.*',
+		'',
+		"# Don't ignore files in any precomputed dependency data that might otherwise be ignored",
+		'!precomputed/**/*'
+	]))
 	
 	# Inform the user that generation succeeded
 	print('Generated boilerplate for module "{}" in "{}"'.format(moduleName, moduleDir))
