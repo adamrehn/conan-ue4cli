@@ -66,6 +66,10 @@ def precompute(manager, argv):
 		# Aggregate the data for each of our dependencies
 		for dependency in info['dependencies']:
 			
+			# Don't precompute data for the toolchain wrapper under Linux
+			if dependency['name'] == 'toolchain-wrapper':
+				continue
+			
 			# Eliminate any include directories or library directories that fall outside the package's root directory
 			pathFilter = lambda paths: list([p for p in paths if p.startswith(dependency['rootpath'])])
 			dependency['include_paths'] = pathFilter(dependency['include_paths'])
