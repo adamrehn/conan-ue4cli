@@ -109,8 +109,11 @@ public class ${MODULE} : ModuleRules
 			PublicAdditionalLibraries.Add(lib);
 		}
 		
-		//Attempt to parse the JSON file containing any additional flags and system libraries
+		//Attempt to parse the JSON file containing any additional flags, modules and system libraries
 		JsonObject flags = JsonObject.Read(new FileReference(flagsFile));
+		
+		//Link against any Unreal Engine modules for bundled third-party libraries
+		PrivateDependencyModuleNames.AddRange(flags.GetStringArrayField("unreal_modules"));
 		
 		//Add any preprocessor definitions specified by the JSON file
 		PublicDefinitions.AddRange(flags.GetStringArrayField("defines"));

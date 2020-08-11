@@ -2,6 +2,18 @@ import argparse, glob, json, os, subprocess, shutil, sys, tempfile
 from os.path import abspath, exists, join
 from ..common import ConanTools, LibraryResolver, ProfileManagement, Utility
 
+
+# Retrieves the Unreal Engine module name for a third-party library wrapper package
+def getUnrealModule(package):
+	
+	# Verify that the specified package is a wrapper package
+	if package['version'] != 'ue4' or package['description'] != 'GENERATED WRAPPER FOR: {}'.format(package['name']):
+		return None
+	
+	# For wrapper packages, the package name is the Unreal Engine module name
+	return package['name']
+
+
 def precompute(manager, argv):
 	
 	# Our supported command-line arguments
@@ -60,14 +72,29 @@ def precompute(manager, argv):
 		# Keep track of any additional aggregated flags, including system libraries and macro definitions
 		flags = {
 			'defines': [],
-			'system_libs': []
+			'system_libs': [],
+			'unreal_modules': []
 		}
+		
+		# The list of Unreal Engine modules that are safe to link to when using an Installed Build of the Engine
+		# TODO: determine these programmatically instead of simply hardcoding a list of known safe modules
+		UNREAL_MODULE_WHITELIST = [
+			'libcurl',
+			'UElibPNG',
+			'zlib'
+		]
 		
 		# Aggregate the data for each of our dependencies
 		for dependency in info['dependencies']:
 			
 			# Don't precompute data for the toolchain wrapper under Linux
 			if dependency['name'] == 'toolchain-wrapper':
+				continue
+			
+			# If the dependency is an Unreal-bundled library that we can safely use in Installed Builds, link to its module directly
+			module = getUnrealModule(dependency)
+			if module is not None and module in UNREAL_MODULE_WHITELIST:
+				flags['unreal_modules'].append(module)
 				continue
 			
 			# Eliminate any include directories or library directories that fall outside the package's root directory
