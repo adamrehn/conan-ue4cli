@@ -137,6 +137,19 @@ public class ${MODULE} : ModuleRules
 			}
 		}
 		
+		//Ensure any shared libraries are staged alongside the binaries for the plugin
+		string[] searchDirs = new string[]{ binDir, libDir };
+		foreach (string dir in searchDirs)
+		{
+			List<string> binaries = new List<string>();
+			binaries.AddRange(Directory.GetFiles(dir, "*.dll"));
+			binaries.AddRange(Directory.GetFiles(dir, "*.dylib"));
+			binaries.AddRange(Directory.GetFiles(dir, "*.so"));
+			foreach (string binary in binaries) {
+				RuntimeDependencies.Add(Path.Combine("$(BinaryOutputDir)", Path.GetFileName(binary)), binary, StagedFileType.NonUFS);
+			}
+		}
+		
 		//Attempt to parse the JSON file containing any additional flags, modules and system libraries
 		JsonObject flags = JsonObject.Read(new FileReference(flagsFile));
 		
