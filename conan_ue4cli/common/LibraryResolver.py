@@ -18,15 +18,16 @@ class LibraryResolver(object):
 		Attempts to resolve the path to the library file for the specified library name
 		'''
 		
-		# Determine the appropriate filename prefix and suffix for the target platform
+		# Determine the appropriate filename prefix and suffixes for the target platform
 		prefix = '' if self.platform == 'Windows' else 'lib'
-		suffix = '.lib' if self.platform == 'Windows' else '.a'
+		suffixes = ['.lib'] if self.platform == 'Windows' else ['.a', '.dylib', '.so']
 		
 		# Iterate through each of our search paths and attempt to find the library file
 		for searchDir in self.searchPaths:
-			resolved = join(searchDir, prefix + libName + suffix)
-			if exists(resolved):
-				return resolved
+			for suffix in suffixes:
+				resolved = join(searchDir, prefix + libName + suffix)
+				if exists(resolved):
+					return resolved
 		
 		# Failed to resolve the library file
 		return None

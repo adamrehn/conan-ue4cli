@@ -65,6 +65,10 @@ def precompute(manager, argv):
 		libDir = join(args.dir, 'precomputed', engineVersion, targetID, 'lib')
 		Utility.truncateDirectory(libDir)
 		
+		# Create a bin directory for aggregated DLLs under Windows
+		binDir = join(args.dir, 'precomputed', engineVersion, targetID, 'bin')
+		Utility.truncateDirectory(binDir)
+		
 		# Create a data directory for our aggregated data/resource files
 		dataDir = join(args.dir, 'precomputed', engineVersion, targetID, 'data')
 		Utility.truncateDirectory(dataDir)
@@ -116,7 +120,7 @@ def precompute(manager, argv):
 					print('Copying "{}"...'.format(include))
 					Utility.copyFileOrDir(include, includeDir)
 			
-			# Aggregate the static library files from each of the dependency's libraries
+			# Aggregate library files from each of the dependency's libraries
 			resolver = LibraryResolver(targetPlatform, dependency['lib_paths'])
 			for lib in dependency['libs']:
 				resolved = resolver.resolve(lib)
@@ -124,7 +128,13 @@ def precompute(manager, argv):
 					print('Copying "{}"...'.format(resolved))
 					Utility.copyFileOrDir(resolved, libDir)
 				else:
-					print('Warning: failed to resolve static library file for library name "{}"'.format(lib))
+					print('Warning: failed to resolve library file for library name "{}"'.format(lib))
+			
+			# Aggregate DLL files from each of the dependency's binary directories under Windows
+			for depBinDir in dependency['bin_paths']:
+				for dll in glob.glob(join(depBinDir, '*.dll')):
+					print('Copying "{}"...'.format(dll))
+					Utility.copyFileOrDir(dll, binDir)
 			
 			# Aggregate the files from each of the dependency's resource directories
 			for depResourceDir in dependency['res_paths']:

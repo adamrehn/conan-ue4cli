@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using UnrealBuildTool;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 //For Tools.DotNETCommon.JsonObject and Tools.DotNETCommon.FileReference
 using Tools.DotNETCommon;
@@ -72,6 +73,21 @@ public class ${MODULE} : ModuleRules
 				PublicAdditionalLibraries.Add(libFull);
 			}
 			
+			//Ensure any shared libraries are staged alongside the binaries for the plugin
+			List<string> searchDirs = new List<string>();
+			searchDirs.AddRange(dep.GetStringArrayField("bin_paths"));
+			searchDirs.AddRange(dep.GetStringArrayField("lib_paths"));
+			foreach (string dir in searchDirs)
+			{
+				List<string> binaries = new List<string>();
+				binaries.AddRange(Directory.GetFiles(dir, "*.dll"));
+				binaries.AddRange(Directory.GetFiles(dir, "*.dylib"));
+				binaries.AddRange(Directory.GetFiles(dir, "*.so"));
+				foreach (string binary in binaries) {
+					RuntimeDependencies.Add(Path.Combine("$(BinaryOutputDir)", Path.GetFileName(binary)), binary, StagedFileType.NonUFS);
+				}
+			}
+			
 			//Copy any data files needed by the package into our staging directory
 			string[] dataDirs = dep.GetStringArrayField("res_paths");
 			foreach (string dir in dataDirs)
@@ -92,21 +108,33 @@ public class ${MODULE} : ModuleRules
 		string flagsFile = Path.Combine(targetDir, "flags.json");
 		string includeDir = Path.Combine(targetDir, "include");
 		string libDir = Path.Combine(targetDir, "lib");
+		string binDir = Path.Combine(targetDir, "bin");
 		string dataDir = Path.Combine(targetDir, "data");
 		
 		//If any of the required files or directories do not exist then we do not have precomputed data
-		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir) || !Directory.Exists(dataDir)) {
+		if (!File.Exists(flagsFile) || !Directory.Exists(includeDir) || !Directory.Exists(libDir) || !Directory.Exists(binDir) || !Directory.Exists(dataDir)) {
 			return false;
 		}
 		
 		//Add the precomputed include directory to our search paths
 		PublicIncludePaths.Add(includeDir);
 		
-		//Link against all static library files in the lib directory
+		//Link against all static library files (and import libraries for DLLs under Windows) in the lib directory
 		string libExtension = ((this.IsWindows(target)) ? ".lib" : ".a");
 		string[] libs = Directory.GetFiles(libDir, "*" + libExtension);
 		foreach(string lib in libs) {
 			PublicAdditionalLibraries.Add(lib);
+		}
+		
+		//Under non-Windows platforms, link against all shared library files in the lib directory
+		if (this.IsWindows(target) == false)
+		{
+			List<string> sharedLibs = new List<string>();
+			sharedLibs.AddRange(Directory.GetFiles(libDir, "*.dylib"));
+			sharedLibs.AddRange(Directory.GetFiles(libDir, "*.so"));
+			foreach(string lib in sharedLibs) {
+				PublicAdditionalLibraries.Add(lib);
+			}
 		}
 		
 		//Attempt to parse the JSON file containing any additional flags, modules and system libraries
