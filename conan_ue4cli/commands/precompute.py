@@ -148,6 +148,11 @@ def precompute(manager, argv):
 			# Add any system libraries to our list
 			flags['system_libs'] += dependency['system_libs']
 		
+		# If any of our generated directories are empty then ensure they won't be ignored by version control
+		for directory in [includeDir, libDir, binDir, dataDir]:
+			if len(list(os.listdir(directory))) == 0:
+				ConanTools.save(join(directory, '.gitignore'), '!.gitignore\n')
+		
 		# Write the additional flags to file
 		flagsFile = join(args.dir, 'precomputed', engineVersion, targetID, 'flags.json')
 		ConanTools.save(flagsFile, json.dumps(flags, sort_keys=True, indent=4))
