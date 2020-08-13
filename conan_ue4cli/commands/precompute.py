@@ -4,7 +4,7 @@ from ..common import ConanTools, LibraryResolver, PackageManagement, ProfileMana
 
 
 # Retrieves the Unreal Engine module name for a third-party library wrapper package
-def getUnrealModule(package):
+def _getUnrealModule(package):
 	
 	# Verify that the specified package is a wrapper package
 	if package['version'] != 'ue4' or package['description'] != 'GENERATED WRAPPER FOR: {}'.format(package['name']):
@@ -93,7 +93,7 @@ def precompute(manager, argv):
 				continue
 			
 			# If the dependency is an Unreal-bundled library that we can safely use in Installed Builds, link to its module directly
-			module = getUnrealModule(dependency)
+			module = _getUnrealModule(dependency)
 			if module is not None and module in UNREAL_MODULE_WHITELIST:
 				flags['unreal_modules'].append(module)
 				continue
