@@ -1,4 +1,4 @@
-from .commands import boilerplate, build, generate, precompute, update
+from .commands import boilerplate, build, generate, precompute, sources, update
 import os, platform, sys
 
 def main(manager, args):
@@ -24,6 +24,10 @@ def main(manager, args):
 		'precompute': {
 			'function': precompute,
 			'description': 'Generates precomputed dependency data for UE4 boilerplate modules'
+		},
+		'sources': {
+			'function': sources,
+			'description': 'Retrieves the source code of the dependencies for one or more conanfiles'
 		},
 		'update': {
 			'function': update,

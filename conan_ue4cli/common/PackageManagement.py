@@ -1,4 +1,4 @@
-import os
+import json, os, subprocess, tempfile
 from os.path import join
 from .ConanTools import ConanTools
 from .Utility import Utility
@@ -24,6 +24,41 @@ class PackageManagement(object):
 		conanfile = conanfile.replace('${DELEGATE_CLASS}', delegates.getDelegateClass(libName))
 		ConanTools.save(join(packageDir, 'conanfile.py'), conanfile)
 		PackageManagement.install(packageDir, channel, profile)
+	
+	@staticmethod
+	def getBuildJson(conanfile, profile):
+		'''
+		Installs the dependencies for a consumer conanfile and parses the generated `conanbuildinfo.json` file.
+		
+		Calls the `conan install` command internally.
+		'''
+		
+		# Create an auto-deleting temporary directory to hold our Conan build output
+		with tempfile.TemporaryDirectory() as tempDir:
+			
+			# Run `conan install` to install the dependencies for the target profile and generate our JSON dependency info
+			subprocess.run(['conan', 'install', conanfile, '--profile=' + profile, '-g=json'], cwd=tempDir, check=True)
+			
+			# Parse the JSON dependency info
+			return json.loads(Utility.readFile(join(tempDir, 'conanbuildinfo.json')))
+	
+	@staticmethod
+	def getDependencyGraph(conanfile, profile):
+		'''
+		Retrieves the dependency graph for a consumer conanfile without installing dependency packages.
+		
+		Calls the `conan info` command internally.
+		'''
+		
+		# Create an auto-deleting temporary directory to hold our Conan info output
+		with tempfile.TemporaryDirectory() as tempDir:
+			
+			# Run `conan info` to generate the JSON for the dependency graph
+			jsonFile = join(tempDir, 'dependencies.json')
+			subprocess.run(['conan', 'info', conanfile, '-pr', profile, '--json', jsonFile], check=True)
+			
+			# Parse the JSON dependency graph
+			return json.loads(Utility.readFile(jsonFile))
 	
 	@staticmethod
 	def removeBasePackages():

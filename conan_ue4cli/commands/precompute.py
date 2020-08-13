@@ -1,6 +1,6 @@
-import argparse, glob, json, os, subprocess, shutil, sys, tempfile
+import argparse, glob, json, os, sys, tempfile
 from os.path import abspath, exists, join
-from ..common import ConanTools, LibraryResolver, ProfileManagement, Utility
+from ..common import ConanTools, LibraryResolver, PackageManagement, ProfileManagement, Utility
 
 
 # Retrieves the Unreal Engine module name for a third-party library wrapper package
@@ -51,11 +51,8 @@ def precompute(manager, argv):
 	# Create an auto-deleting temporary directory to hold our Conan build output
 	with tempfile.TemporaryDirectory() as tempDir:
 		
-		# Run `conan install` to install the dependencies for the target profile and generate our JSON dependency info
-		subprocess.run(['conan', 'install', args.dir, '--profile=' + args.profile, '-g=json'], cwd=tempDir, check=True)
-		
-		# Parse the JSON dependency info
-		info = json.loads(Utility.readFile(join(tempDir, 'conanbuildinfo.json')))
+		# Run `conan install` to install the dependencies for the target profile and retrieve the JSON dependency info
+		info = PackageManagement.getBuildJson(args.dir, args.profile)
 		
 		# Create an include directory for our aggregated headers
 		includeDir = join(args.dir, 'precomputed', engineVersion, targetID, 'include')
