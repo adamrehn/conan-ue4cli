@@ -1,6 +1,28 @@
-import argparse, glob, itertools, os, shutil, subprocess, sys, tempfile
-from os.path import abspath, exists, join
+import argparse, itertools, os, platform, shutil, subprocess, sys, tempfile
+from os.path import abspath, exists, isdir, join
+from glob import glob
 from ..common import ConanTools, PackageManagement, ProfileManagement, RecipeManagement, Utility
+
+
+# Deletes the specified file or directory
+def _delete(path):
+	
+	# Under Windows, we need to use the `del` command to delete read-only files or directories
+	# (And even then it often leaves empty directories behind that need to be cleaned up)
+	if platform.system() == 'Windows':
+		Utility.run(['del', '/f', '/s', '/q', path], shell=True)
+		if isdir(path):
+			shutil.rmtree(path, ignore_errors=True)
+	else:
+		shutil.rmtree(path) if isdir(path) else os.unlink(path)
+
+# Removes any of the specified suffixes from the supplied string
+def _stripSuffixes(s, suffixes):
+	stripped = s
+	for suffix in suffixes:
+		stripped = stripped[0: -len(suffix)] if stripped.endswith(suffix) else stripped
+	return stripped
+
 
 def sources(manager, argv):
 	
@@ -22,7 +44,7 @@ def sources(manager, argv):
 		print('Using profile for host platform "{}"'.format(args.profile))
 	
 	# Verify that at least one conanfile was specified and that all specified conanfiles actually exist
-	conanfiles = itertools.chain.from_iterable([glob.glob(p, recursive=True) if '*' in p else [p] for p in args.conanfile])
+	conanfiles = itertools.chain.from_iterable([glob(p, recursive=True) if '*' in p else [p] for p in args.conanfile])
 	conanfiles = list([abspath(p) for p in conanfiles])
 	for conanfile in conanfiles:
 		if not exists(conanfile):
@@ -56,9 +78,27 @@ def sources(manager, argv):
 			sourceDir = join(tempDir, 'source')
 			subprocess.run(['conan', 'source', conanfile, '-sf', sourceDir], check=True)
 			
-			# Compress the source code and place the archive in our output directory
+			# Remove any files or directories from the source code that should be excluded (e.g. version control files)
+			excludePatterns = ['.git', '.gitattributes', '.gitignore', '.github']
+			for match in itertools.chain.from_iterable([glob(join(sourceDir, '**', pattern), recursive=True) for pattern in excludePatterns]):
+				print('Excluding: {}'.format(match), flush=True)
+				_delete(match)
+			
+			# Strip any unwanted suffixes from the package name when generating the archive name for the source code
 			details = RecipeManagement.parseReference(dependency['reference'])
-			shutil.make_archive(join(args.dir, '{}-{}'.format(details['name'], details['version'])), 'zip', sourceDir)
+			name = _stripSuffixes(details['name'], [
+				'-ue4'
+			])
+			
+			# If the archive file already exists in our output directory then remove it
+			archive = join(args.dir, '{}-{}.zip'.format(name, details['version']))
+			if exists(archive):
+				print('Removing existing archive: {}'.format(archive), flush=True)
+				_delete(archive)
+			
+			# Compress the source code
+			print('Compressing source code for package {}...'.format(dependency['reference']), flush=True)
+			shutil.make_archive(_stripSuffixes(archive, ['.zip']), 'zip', sourceDir)
 	
 	# Inform the user that source code archival is complete
 	print('Done.')
