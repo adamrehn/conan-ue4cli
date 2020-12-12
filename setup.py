@@ -34,7 +34,7 @@ setup(
 	install_requires = [
 		'conan>=1.7.4',
 		'setuptools',
-		'ue4cli>=0.0.47',
+		'ue4cli>=0.0.49',
 		'wheel'
 	],
 	package_data = {
