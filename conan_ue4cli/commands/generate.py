@@ -19,14 +19,15 @@ def _locateClang(manager, architecture='x86_64'):
 	'''
 	
 	# Retrieve the minor version number for the supplied Unreal Engine installation
+	versionMajor = int(manager.getEngineVersion('major'))
 	versionMinor = int(manager.getEngineVersion('minor'))
-	
+
 	# Check if the Unreal Engine installation has a bundled version of clang (introduced in UE4.20.0)
 	engineRoot = manager.getEngineRoot()
 	bundledClang = glob.glob(join(engineRoot, 'Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/*clang*/*{}*/bin/clang'.format(architecture)))
 	if len(bundledClang) != 0:
 		return (bundledClang[0], bundledClang[0] + '++', None)
-	elif versionMinor == 19:
+	elif versionMajor == 4 and versionMinor == 19:
 		
 		# For Unreal Engine 4.19, download the bundled toolchain from 4.20 and use that
 		print("Downloading toolchain bundle since Unreal Engine 4.19 doesn't include one...")
@@ -54,8 +55,9 @@ def generate(manager, argv):
 	
 	# Verify that the detected version of UE4 is new enough
 	versionFull = manager.getEngineVersion()
+	versionMajor = int(manager.getEngineVersion('major'))
 	versionMinor = int(manager.getEngineVersion('minor'))
-	if versionMinor < 19:
+	if versionMajor < 4 or (versionMajor == 4 and versionMinor < 19):
 		print('Warning: the detected UE4 version ({}) is too old (4.19.0 or newer required), skipping installation.'.format(versionFull), file=sys.stderr)
 		return
 	
