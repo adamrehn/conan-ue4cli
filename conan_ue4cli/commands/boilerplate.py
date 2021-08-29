@@ -18,15 +18,16 @@ def boilerplate(manager, argv):
 	
 	# Verify that the detected version of UE4 is new enough
 	versionFull = manager.getEngineVersion()
+	versionMajor = int(manager.getEngineVersion('major'))
 	versionMinor = int(manager.getEngineVersion('minor'))
-	if versionMinor < 19:
+	if versionMajor < 4 or (versionMajor == 4 and versionMinor < 19):
 		print('Error: the detected UE4 version ({}) is too old. 4.19.0 or newer is required.'.format(versionFull), file=sys.stderr)
 		sys.exit(1)
 	
 	# Select the appropriate template version for the detected version of UE4
-	if versionMinor == 19:
+	if versionMajor == 4 and versionMinor == 19:
 		templateVersion = 1
-	elif versionMinor >= 20 and versionMinor <= 23:
+	elif versionMajor == 4 and versionMinor >= 20 and versionMinor <= 23:
 		templateVersion = 2
 	else:
 		templateVersion = 3
