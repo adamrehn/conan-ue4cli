@@ -1,6 +1,6 @@
 import argparse, glob, json, os, sys, tempfile
 from os.path import abspath, exists, join
-from ..common import ConanTools, LibraryResolver, PackageManagement, ProfileManagement, Utility
+from ..common import ConanTools, ExecutableResolver, LibraryResolver, PackageManagement, ProfileManagement, Utility
 
 
 # Retrieves the Unreal Engine module name for a third-party library wrapper package
@@ -98,6 +98,12 @@ def precompute(manager, argv):
 				flags['unreal_modules'].append(module)
 				continue
 			
+			# Retrieve the list of binaries (if any) for the dependency
+			binaries = []
+			userInfo = info['deps_user_info'][dependency['name']]
+			if 'binaries' in userInfo:
+				binaries = json.loads(userInfo['binaries'])
+			
 			# Eliminate any include directories or library directories that fall outside the package's root directory
 			pathFilter = lambda paths: list([p for p in paths if p.startswith(dependency['rootpath'])])
 			dependency['include_paths'] = pathFilter(dependency['include_paths'])
@@ -138,6 +144,16 @@ def precompute(manager, argv):
 				for file in glob.glob(join(depResourceDir, '*')):
 					print('Copying "{}"...'.format(file))
 					Utility.copyFileOrDir(file, dataDir)
+			
+			# Copy the binaries from each of the dependency's binary directories
+			resolver = ExecutableResolver(targetPlatform, dependency['bin_paths'])
+			for binary in binaries:
+				resolved = resolver.resolve(binary)
+				if resolved is not None:
+					print('Copying "{}"...'.format(resolved))
+					Utility.copyFileOrDir(resolved, binDir)
+				else:
+					print('Warning: failed to resolve executable file for name "{}"'.format(binary))
 			
 			# Add any macro definitions to our list
 			flags['defines'] += dependency['defines']

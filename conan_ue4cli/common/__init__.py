@@ -1,6 +1,7 @@
 from .CommandExecutor import CommandExecutor
 from .ConanTools import ConanTools
 from .DelegateManager import DelegateManager
+from .ExecutableResolver import ExecutableResolver
 from .LibraryResolver import LibraryResolver
 from .PackageBuilder import PackageBuilder
 from .PackageManagement import PackageManagement
