@@ -29,8 +29,10 @@ def boilerplate(manager, argv):
 		templateVersion = 1
 	elif versionMajor == 4 and versionMinor >= 20 and versionMinor <= 23:
 		templateVersion = 2
-	else:
+	elif versionMajor == 4 and versionMinor >= 24 and versionMinor <= 26:
 		templateVersion = 3
+	else:
+		templateVersion = 4
 	
 	# Determine the full path to the directory containing our templates
 	dataDir = join(dirname(dirname(abspath(__file__))), 'data')
