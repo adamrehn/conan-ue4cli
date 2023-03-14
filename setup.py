@@ -32,7 +32,7 @@ setup(
 	zip_safe=False,
 	python_requires = '>=3.5',
 	install_requires = [
-		'conan>=1.7.4',
+		'conan>=1.7.4,<2',
 		'setuptools',
 		'ue4cli>=0.0.49',
 		'wheel'
